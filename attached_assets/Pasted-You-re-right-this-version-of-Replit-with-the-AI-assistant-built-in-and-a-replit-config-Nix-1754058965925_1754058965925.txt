@@ -1,0 +1,42 @@
+You're right — this version of Replit (with the **AI assistant built in and a `.replit` config + Nix-based environment**) needs a different workflow than classic Flask hosting. To correctly **bootstrap all 6 TrustGraphed backend modules** into your Replit project with assistant support, here's the **exact prompt** you can paste into the Replit AI Assistant:
+
+---
+
+### ✅ **Prompt for Replit Assistant:**
+
+> I am building a modular Flask backend in Replit for a project called **TrustGraphed**. The current app is already running and returning a `"/health"` status JSON. Now I want to implement a modular trust evaluation pipeline with 6 core backend modules. Please do the following:
+>
+> 1. In the `/backend/utils/` directory, create 6 Python modules:
+>
+>    * `sdg.py`: Source Data Grappler – Extracts assertions and citations from input text.
+>    * `aie.py`: Assertion Integrity Engine – Detects contradictions, redundancies, or unsupported claims.
+>    * `cce.py`: Confidence Computation Engine – Assigns confidence scores to assertions.
+>    * `zfp.py`: Zero-Fabrication Protocol – Flags hallucinations or AI-generated anomalies.
+>    * `score_engine.py`: TrustScore Engine – Aggregates module outputs into a final trust score.
+>    * `certificate.py`: Certificate Generator – Generates a JSON or PDF trust certificate.
+>
+> 2. In `/backend/routes/`, create a new route file `evaluate.py`:
+>
+>    * Expose a POST endpoint at `/evaluate`.
+>    * Accept a JSON payload: `{ "content": "..." }`
+>    * Call all 6 modules in sequence on the input content and return the final score + insights.
+>
+> 3. Update `app.py` to register the new blueprint from `routes/evaluate.py`.
+>
+> 4. Ensure all modules are stubbed with dummy logic for now (e.g., return placeholder scores and messages).
+>
+> ⚠️ Keep the `.replit` config and Flask port setup unchanged.
+>
+> ✅ Once implemented, I should be able to `curl -X POST http://localhost:5000/evaluate` with a JSON body and get back a fake TrustScore result.
+
+---
+
+### ✅ Optional Addition (if you want it to also scaffold test data):
+
+You can append:
+
+> Also, optionally create a folder `/test_data/` with 1 sample input file (e.g., `sample_input.txt`) containing example content to test with.
+
+---
+
+Would you like me to generate the **dummy implementations for each of those 6 modules** as well right now for direct copy-paste?
