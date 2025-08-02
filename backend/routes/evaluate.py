@@ -74,8 +74,38 @@ def extract_text_from_file(file):
                 raise ValueError(f"PDF processing failed: {str(pdf_error)}")
 
         elif filename.endswith('.docx'):
-            # Handle DOCX files
+            # Handle DOCX files with validation
             try:
+                # First, reset file pointer
+                file.seek(0)
+                
+                # Try to validate it's a proper DOCX (ZIP) file
+                import zipfile
+                try:
+                    # Check if it's a valid ZIP file (DOCX is ZIP-based)
+                    with zipfile.ZipFile(file, 'r') as test_zip:
+                        # Check for required DOCX components
+                        required_files = ['[Content_Types].xml', 'word/document.xml']
+                        zip_files = test_zip.namelist()
+                        if not any(req in zip_files for req in required_files):
+                            raise ValueError("File appears to be ZIP but not a valid DOCX structure")
+                    
+                    # Reset file pointer for docx processing
+                    file.seek(0)
+                    
+                except zipfile.BadZipFile:
+                    # Not a valid ZIP file - try as plain text or legacy DOC
+                    file.seek(0)
+                    content = file.read().decode('utf-8', errors='replace')
+                    # Clean up binary artifacts
+                    content = ''.join(char for char in content if char.isprintable() or char.isspace())
+                    
+                    if len(content.strip()) < 10:
+                        raise ValueError("File appears corrupted - unable to extract meaningful text")
+                    
+                    return content
+
+                # Process as proper DOCX
                 doc = docx.Document(file)
                 content = ""
 
@@ -97,8 +127,22 @@ def extract_text_from_file(file):
 
                 return content
 
+            except ValueError:
+                # Re-raise our custom errors
+                raise
             except Exception as docx_error:
-                raise ValueError(f"DOCX processing failed: {str(docx_error)}")
+                # Try fallback text extraction for corrupted files
+                try:
+                    file.seek(0)
+                    content = file.read().decode('utf-8', errors='replace')
+                    content = ''.join(char for char in content if char.isprintable() or char.isspace())
+                    
+                    if len(content.strip()) >= 10:
+                        return content
+                    else:
+                        raise ValueError(f"DOCX processing failed and no readable text found: {str(docx_error)}")
+                except:
+                    raise ValueError(f"DOCX processing failed: {str(docx_error)}")
 
         elif filename.endswith('.doc'):
             # Legacy DOC files - basic text extraction attempt
