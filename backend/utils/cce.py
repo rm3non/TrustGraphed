@@ -209,7 +209,7 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
         "ai": 1.10,          # 10% BONUS for transparent AI declaration
         "copied": 1.10,      # 10% BONUS for transparent copied content declaration  
         "mixed": 1.15,       # 15% BONUS for transparent mixed sources declaration
-        "unsure": 0.90       # 10% reduction for undeclared content type
+        "unsure": 0.70       # 30% reduction for undeclared content type - encourages transparency
     }
     
     transparency_multiplier = transparency_multipliers.get(assertion_type.lower(), 0.80)
