@@ -29,6 +29,7 @@ class TrustGraphedApp {
         
         this.currentInputMethod = 'text';
         this.currentFileContent = '';
+        this.currentFile = null;
         
         this.init();
     }
@@ -170,119 +171,14 @@ class TrustGraphedApp {
             return;
         }
 
-        try {
-            this.setLoading(true);
-            this.hideError();
-            
-            let extractedText = '';
-            
-            switch (fileExtension) {
-                case '.txt':
-                    extractedText = await this.readTextFile(file);
-                    break;
-                case '.pdf':
-                    extractedText = await this.readPdfFile(file);
-                    break;
-                case '.docx':
-                    extractedText = await this.readDocxFile(file);
-                    break;
-            }
-            
-            if (!extractedText || extractedText.trim().length < 10) {
-                throw new Error('Unable to extract sufficient text from file. Please check the file content.');
-            }
-            
-            this.currentFileContent = extractedText;
-            this.showFileInfo(file.name);
-            this.validateInput();
-            
-        } catch (error) {
-            console.error('File processing error:', error);
-            this.showError(`Failed to process file: ${error.message}`);
-            this.clearFile();
-        } finally {
-            this.setLoading(false);
-        }
+        // Store the file for later submission - no client-side processing
+        this.currentFile = file;
+        this.currentFileContent = 'FILE_UPLOAD'; // Flag to indicate file mode
+        this.showFileInfo(file.name);
+        this.validateInput();
     }
 
-    async readTextFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = (e) => reject(new Error('Failed to read text file'));
-            reader.readAsText(file);
-        });
-    }
-
-    async readPdfFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const arrayBuffer = e.target.result;
-                    const text = await this.extractPdfText(arrayBuffer);
-                    resolve(text);
-                } catch (error) {
-                    reject(new Error('Failed to parse PDF file. Please ensure it contains readable text.'));
-                }
-            };
-            reader.onerror = () => reject(new Error('Failed to read PDF file'));
-            reader.readAsArrayBuffer(file);
-        });
-    }
-
-    async extractPdfText(arrayBuffer) {
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const text = String.fromCharCode.apply(null, uint8Array);
-        
-        const textMatches = text.match(/\(([^)]+)\)/g);
-        if (textMatches && textMatches.length > 0) {
-            return textMatches.map(match => match.slice(1, -1)).join(' ').substring(0, 5000);
-        }
-        
-        const readableText = text.replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
-        if (readableText.length > 50) {
-            return readableText.substring(0, 5000);
-        }
-        
-        throw new Error('No readable text found in PDF');
-    }
-
-    async readDocxFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const arrayBuffer = e.target.result;
-                    const text = await this.extractDocxText(arrayBuffer);
-                    resolve(text);
-                } catch (error) {
-                    reject(new Error('Failed to parse DOCX file. Please save as .txt or try a different file.'));
-                }
-            };
-            reader.onerror = () => reject(new Error('Failed to read DOCX file'));
-            reader.readAsArrayBuffer(file);
-        });
-    }
-
-    async extractDocxText(arrayBuffer) {
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const text = String.fromCharCode.apply(null, uint8Array);
-        
-        const xmlMatches = text.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
-        if (xmlMatches && xmlMatches.length > 0) {
-            const extractedText = xmlMatches
-                .map(match => match.replace(/<[^>]+>/g, ''))
-                .join(' ')
-                .trim();
-            
-            if (extractedText.length > 10) {
-                return extractedText.substring(0, 5000);
-            }
-        }
-        
-        throw new Error('No readable text found in DOCX file');
-    }
+    
 
     showFileInfo(filename) {
         if (this.fileName) this.fileName.textContent = filename;
@@ -292,6 +188,7 @@ class TrustGraphedApp {
     clearFile() {
         if (this.fileInput) this.fileInput.value = '';
         this.currentFileContent = '';
+        this.currentFile = null;
         this.fileInfo?.classList.add('hidden');
         if (this.fileName) this.fileName.textContent = 'No file selected';
         this.validateInput();
@@ -304,7 +201,7 @@ class TrustGraphedApp {
             const textContent = this.contentInput?.value.trim() || '';
             hasValidInput = textContent.length >= 10;
         } else {
-            hasValidInput = this.currentFileContent.length >= 10;
+            hasValidInput = this.currentFile && this.currentFile.size > 0;
         }
         
         if (this.analyzeBtn) this.analyzeBtn.disabled = !hasValidInput;
@@ -323,39 +220,54 @@ class TrustGraphedApp {
     async handleSubmit(e) {
         e.preventDefault();
         
-        let content = '';
-        
-        if (this.currentInputMethod === 'text') {
-            content = this.contentInput?.value.trim() || '';
-        } else {
-            content = this.currentFileContent;
-        }
-        
-        if (!content || content.length < 10) {
-            this.showError('Please provide at least 10 characters of content to analyze.');
-            return;
-        }
-
         this.setLoading(true);
         this.hideError();
         this.hideResults();
 
         try {
-            console.log('Sending content for evaluation:', content.substring(0, 100) + '...');
+            let response;
             
-            const response = await fetch('/evaluate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ content: content })
-            });
+            if (this.currentInputMethod === 'text') {
+                const content = this.contentInput?.value.trim() || '';
+                
+                if (!content || content.length < 10) {
+                    this.showError('Please provide at least 10 characters of content to analyze.');
+                    return;
+                }
+                
+                console.log('Sending text content for evaluation:', content.substring(0, 100) + '...');
+                
+                response = await fetch('/evaluate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+                
+            } else {
+                // File upload mode
+                if (!this.currentFile) {
+                    this.showError('Please select a file to upload.');
+                    return;
+                }
+                
+                console.log('Sending file for evaluation:', this.currentFile.name);
+                
+                const formData = new FormData();
+                formData.append('file', this.currentFile);
+                
+                response = await fetch('/evaluate', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
 
             console.log('Response status:', response.status);
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
             }
 
             const data = await response.json();
