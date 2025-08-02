@@ -1,0 +1,119 @@
+Got it — here’s the **updated Replit prompt** for your **high-impact, VC-facing TrustGraphed™ frontend**, with the **Live Demo reference removed** (no public app link shown):
+
+---
+
+## ✅ Replit Prompt for High-Impact TrustGraphed Frontend (VC-Ready)
+
+> **Create a sleek, protocol-grade landing page for TrustGraphed™ — a patent-pending infrastructure protocol for verifying digital content integrity.**
+>
+> ### 🎯 Objective:
+>
+> Design a website that appeals to VCs, policy makers, and institutional partners. It should emphasize protocol credibility, technical depth, and real-world use cases without making premature claims about adoption or usage.
+>
+> ### 🔐 Brand:
+>
+> * **Name**: TrustGraphed™
+> * **Tagline**: *Digital Truth Infrastructure Starts Here*
+> * **Status**: Patent Pending
+> * **Type**: Foundational digital content trust protocol
+
+---
+
+### 📐 Page Layout & Content
+
+#### **1. Hero Section**
+
+* 🧠 Title: **Digital Truth Infrastructure Starts Here**
+* 🔍 Subtitle: “TrustGraphed™ is a deterministic protocol to evaluate the authenticity, consistency, and trustworthiness of digital assertions.”
+* ✅ CTA: `Explore the Protocol` button (scrolls to architecture)
+* 🔁 Visual: Abstract animation showing content → Trust Score → Certificate
+
+---
+
+#### **2. Problem → Solution**
+
+* ❌ Problem: “The internet is overwhelmed by unverifiable AI-generated content.”
+* ✅ Solution: “TrustGraphed™ restores epistemic clarity by evaluating each assertion through a six-stage analytical pipeline.”
+
+---
+
+#### **3. Protocol Architecture**
+
+* 📊 Title: “The TrustGraphed Protocol”
+* 🔬 Visual: Modular pipeline illustration
+
+  ```
+  Content → [SDG] → [AIE] → [CCE] → [ZFP] → [Score Engine] → [Certificate]
+  ```
+* 🧩 Module Cards:
+
+  * **SDG**: Source Data Grappler — Extracts assertions and references
+  * **AIE**: Assertion Integrity Engine — Detects contradictions
+  * **CCE**: Confidence Computation — Evaluates language certainty
+  * **ZFP**: Zero-Fabrication Protocol — Detects hallucinated or synthetic content
+  * **TrustScore Engine** — Weighted scoring model
+  * **Certificate Generator** — Cryptographic output
+
+---
+
+#### **4. Impact Section**
+
+* 🏆 Title: “Why TrustGraphed Matters”
+* Quote: *“Think HTTPS — but for content truth.”*
+* Grid of use cases:
+
+  * 📚 Academia — Detect falsified research claims
+  * 📰 Journalism — Validate source-backed news
+  * ⚖️ Legal — Authenticate affidavits, contracts
+  * 🏢 Enterprises — Assess internal documentation
+  * 🌐 Platforms — Flag mis/disinformation
+
+---
+
+#### **5. Roadmap & Vision**
+
+* 🚧 Current: Multi-format document support, real-time evaluation, verifiable certificates
+* 🔮 Coming Soon:
+
+  * Blockchain certificate anchoring
+  * Multi-language content trust
+  * Public SDK + API for integration
+  * Foundation governance model
+  * Enterprise dashboard
+
+---
+
+#### **6. Footer**
+
+* 🧑 Author: Rahul Menon — Digital Trust Infrastructure Architect
+* 📜 Patent: Filed, India (PCT-ready)
+* 🛡️ License: MIT
+* 🧠 Links: GitHub | Contact | Privacy
+
+---
+
+### 🎨 Design Notes
+
+* Fonts: `Inter` or `IBM Plex Sans`
+* Colors: Neutral dark theme + vibrant accents
+* Style: Professional, minimal, protocol-grade aesthetic
+* Animations: Subtle, non-intrusive (score reveal, hover effects)
+
+---
+
+### 🛠 Platform Preference
+
+* Prefer **HTML + Tailwind** or **React + Tailwind**
+* Avoid premature “live demo” or production buttons
+* Designed for **future integration**, not fake testimonials or marketing bloat
+
+---
+
+Would you like me to now generate this entire UI in:
+
+* ✅ `React + Tailwind`
+* or ✅ `HTML + Tailwind`
+
+…and push to your Replit or GitHub directly?
+
+Let me know and I’ll execute immediately.

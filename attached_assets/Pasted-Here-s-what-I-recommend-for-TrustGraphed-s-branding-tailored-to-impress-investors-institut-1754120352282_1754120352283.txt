@@ -1,0 +1,67 @@
+Here’s what I recommend for **TrustGraphed™’s branding** — tailored to impress **investors, institutions, and serious technologists**. This style evokes **credibility**, **stability**, and **deep-tech sophistication** while feeling **distinctive** and **future-oriented**.
+
+---
+
+## 🎨 Color Palette: **"Institutional Trust + Infra Tech"**
+
+| Element         | Color         | Hex Code  | Meaning                                  |
+| --------------- | ------------- | --------- | ---------------------------------------- |
+| **Primary**     | Deep Indigo   | `#2C2D5B` | Stability, credibility, depth            |
+| **Accent**      | Electric Teal | `#00D1B2` | Innovation, precision, digital signal    |
+| **Secondary**   | Steel Gray    | `#5A5D6E` | Neutral infrastructure base              |
+| **Background**  | Off-Black     | `#12131A` | Protocol-grade, low-noise backdrop       |
+| **Highlight**   | Amber Glow    | `#FFC857` | Certificate/caution indicator (optional) |
+| **Success**     | Emerald Green | `#21CE99` | Verified, trusted content                |
+| **Error/Alert** | Alert Red     | `#FF4E50` | Detected contradictions, fabrication     |
+
+> This combination avoids common "AI website" overuse of gradients, blues, or gimmicky neon. It feels **regulatory-ready**, **crypto-verifiable**, and **globally professional**.
+
+---
+
+## 🧠 Typography
+
+| Type              | Font                         | Purpose                     |
+| ----------------- | ---------------------------- | --------------------------- |
+| Headings (H1–H3)  | `IBM Plex Sans`              | Precise, modern, structured |
+| Body Text         | `Inter`                      | Clean, legible, widely used |
+| Optional Alt Font | `DM Sans` or `Space Grotesk` | Adds slight tech flair      |
+
+---
+
+## 🔰 Logo Design Recommendation
+
+### 📌 Brand Name: **TrustGraphed™**
+
+* Use **camel case** consistently in design — e.g., `TrustGraphed`, not `Trustgraphed`.
+
+### 🧭 Style:
+
+* **Symbol + Wordmark** (Left icon + text right)
+* Flat, minimal — no 3D, no gradients, no AI clichés
+
+### 🎨 Logo Concept Options:
+
+#### Option 1: **"Assertion Chain"**
+
+* Visual: Interlinked nodes or small dot-network in checkmark shape
+* Symbolism: Verified assertions, graph structure, trust protocol
+
+#### Option 2: **"Graph Lock"**
+
+* Visual: Graph node structure subtly forming a lock or shield
+* Symbolism: Immutable structure + security
+
+#### Option 3: **"Certificate Stamp"**
+
+* Visual: Abstract certificate + star + ID glyph
+* Symbolism: Verifiable output and legitimacy
+
+---
+
+## 🛠 Where to Generate the Logo
+
+Use [**Looka**](https://looka.com), [**LogoMakr**](https://logomakr.com/), or \[**Figma**] with Material Icons to experiment. Avoid Fiverr-style cartoony designs.
+
+Would you like me to generate a **Figma-based logo concept** now for Option 1 or Option 2? Or give you SVG instructions to hand over to a designer?
+
+Let me know.
