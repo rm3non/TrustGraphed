@@ -7,7 +7,7 @@ from flask import Blueprint, request, jsonify
 import sys
 import os
 import tempfile
-import PyPDF2
+import fitz  # PyMuPDF
 import docx
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -21,36 +21,101 @@ from utils.certificate import CertificateGenerator
 evaluate_bp = Blueprint('evaluate', __name__)
 
 def extract_text_from_file(file):
-    """Extract text content from uploaded file."""
+    """Extract text content from uploaded file with comprehensive error handling."""
     filename = file.filename.lower()
     
     try:
-        if filename.endswith('.txt') or filename.endswith('.md'):
-            return file.read().decode('utf-8')
-        
-        elif filename.endswith('.pdf'):
-            content = ""
-            pdf_reader = PyPDF2.PdfReader(file)
-            for page in pdf_reader.pages:
-                content += page.extract_text() + "\n"
+        if filename.endswith(('.txt', '.md')):
+            # Handle text files
+            content = file.read().decode('utf-8', errors='replace')
+            if not content.strip():
+                raise ValueError("Text file appears to be empty")
             return content
         
-        elif filename.endswith(('.docx', '.doc')):
-            if filename.endswith('.docx'):
+        elif filename.endswith('.pdf'):
+            # Handle PDF files using PyMuPDF (fitz)
+            content = ""
+            try:
+                # Read file content into bytes
+                file_bytes = file.read()
+                if not file_bytes:
+                    raise ValueError("PDF file appears to be empty")
+                
+                # Open PDF document from bytes
+                pdf_doc = fitz.open(stream=file_bytes, filetype="pdf")
+                
+                if pdf_doc.page_count == 0:
+                    raise ValueError("PDF has no pages")
+                
+                # Extract text from all pages
+                for page_num in range(pdf_doc.page_count):
+                    page = pdf_doc[page_num]
+                    page_text = page.get_text()
+                    if page_text.strip():  # Only add non-empty pages
+                        content += page_text + "\n"
+                
+                pdf_doc.close()
+                
+                if not content.strip():
+                    raise ValueError("No readable text found in PDF")
+                
+                return content
+                
+            except Exception as pdf_error:
+                raise ValueError(f"PDF processing failed: {str(pdf_error)}")
+        
+        elif filename.endswith('.docx'):
+            # Handle DOCX files
+            try:
                 doc = docx.Document(file)
                 content = ""
+                
+                # Extract text from paragraphs
                 for paragraph in doc.paragraphs:
-                    content += paragraph.text + "\n"
+                    if paragraph.text.strip():
+                        content += paragraph.text + "\n"
+                
+                # Extract text from tables if any
+                for table in doc.tables:
+                    for row in table.rows:
+                        for cell in row.cells:
+                            if cell.text.strip():
+                                content += cell.text + " "
+                    content += "\n"
+                
+                if not content.strip():
+                    raise ValueError("No readable text found in DOCX file")
+                
                 return content
-            else:
-                # For .doc files, we'll treat as text for now
-                return file.read().decode('utf-8', errors='ignore')
+                
+            except Exception as docx_error:
+                raise ValueError(f"DOCX processing failed: {str(docx_error)}")
+        
+        elif filename.endswith('.doc'):
+            # Legacy DOC files - basic text extraction attempt
+            try:
+                content = file.read().decode('utf-8', errors='replace')
+                # Remove common binary artifacts
+                content = ''.join(char for char in content if char.isprintable() or char.isspace())
+                
+                if not content.strip() or len(content.strip()) < 10:
+                    raise ValueError("Unable to extract readable text from DOC file")
+                
+                return content
+                
+            except Exception as doc_error:
+                raise ValueError(f"DOC processing failed: {str(doc_error)}")
         
         else:
-            raise ValueError(f"Unsupported file type: {filename}")
+            supported_types = ['.txt', '.md', '.pdf', '.docx', '.doc']
+            raise ValueError(f"Unsupported file type. Supported formats: {', '.join(supported_types)}")
             
+    except ValueError:
+        # Re-raise ValueError as-is
+        raise
     except Exception as e:
-        raise ValueError(f"Failed to extract text from file: {str(e)}")
+        # Catch any other unexpected errors
+        raise ValueError(f"Unexpected error processing file '{filename}': {str(e)}")
 
 evaluate_bp = Blueprint('evaluate', __name__)
 
@@ -67,14 +132,30 @@ def evaluate_content():
             # File upload mode
             uploaded_file = request.files['file']
             
-            if uploaded_file.filename == '':
+            if uploaded_file.filename == '' or uploaded_file.filename is None:
                 return jsonify({"error": "No file selected"}), 400
+            
+            # Validate file size (10MB limit)
+            file_size = len(uploaded_file.read())
+            uploaded_file.seek(0)  # Reset file pointer
+            
+            if file_size == 0:
+                return jsonify({"error": "File is empty"}), 400
+            
+            if file_size > 10 * 1024 * 1024:  # 10MB limit
+                return jsonify({"error": "File size exceeds 10MB limit"}), 400
             
             # Extract text from file
             try:
                 content = extract_text_from_file(uploaded_file)
+                
+                # Log successful extraction for debugging
+                print(f"Successfully extracted {len(content)} characters from {uploaded_file.filename}")
+                
             except ValueError as e:
-                return jsonify({"error": str(e)}), 400
+                return jsonify({"error": f"File processing error: {str(e)}"}), 400
+            except Exception as e:
+                return jsonify({"error": f"Unexpected file processing error: {str(e)}"}), 500
                 
         elif request.is_json:
             # Text input mode
@@ -183,3 +264,33 @@ def evaluate_health():
             "Certificate Generator"
         ]
     })
+
+@evaluate_bp.route('/evaluate/test-file', methods=['POST'])
+def test_file_processing():
+    """Test endpoint for file processing without full evaluation."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+            
+        uploaded_file = request.files['file']
+        
+        if uploaded_file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Extract text from file
+        try:
+            content = extract_text_from_file(uploaded_file)
+            
+            return jsonify({
+                "status": "success",
+                "filename": uploaded_file.filename,
+                "content_length": len(content),
+                "content_preview": content[:200] + "..." if len(content) > 200 else content,
+                "message": "File processed successfully"
+            }), 200
+            
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Test failed: {str(e)}"}), 500
