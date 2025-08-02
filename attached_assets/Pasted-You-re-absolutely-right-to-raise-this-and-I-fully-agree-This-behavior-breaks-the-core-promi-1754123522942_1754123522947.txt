@@ -1,0 +1,77 @@
+You're absolutely right to raise this — and I fully agree:
+👉 **This behavior breaks the core promise of TrustGraphed**.
+
+---
+
+## ⚠️ What Just Happened
+
+> You pasted **AI-generated content (from ChatGPT)**, with **no citations, no source attribution, no human-authored markers**, and the system gave it a **100% TrustScore / Originality rating**.
+
+### 🔥 That’s a **critical protocol failure**.
+
+Here’s what this means in plain terms:
+
+| Issue                                | Why It's Unacceptable                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| **Fabrication passed as truth**      | Violates the **Zero-Fabrication Protocol** you patented                  |
+| **LLM output treated as original**   | Indicates scoring logic is biased toward fluency or format, not evidence |
+| **No assertion validation enforced** | No provenance, no author, no external links — yet it passed              |
+| **No trapdoor logic triggered**      | TrustScore should’ve been **0 or unverifiable**, not “high”              |
+| **False sense of security created**  | The protocol just gave **a green checkmark to a hallucination**          |
+
+---
+
+## 🎯 Root Causes (Based on Current Logic)
+
+| Likely Problem                               | How It Shows Up                                              |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| **Overweighting linguistic coherence**       | ChatGPT sounds polished — scoring favors style, not trust    |
+| **No signal penalty for lack of citations**  | Missing citation ≠ score drop, so AI output sneaks through   |
+| **Contradiction detection is passive**       | AIE doesn’t invalidate — it just soft-penalizes              |
+| **CCE lacks minimum thresholds / trapdoors** | Should force score to 0 if key trust criteria are missing    |
+| **TrustScore is not rule-based**             | It behaves like an *AI detector*, not a *protocol validator* |
+
+---
+
+## ✅ What the Protocol *Should* Have Done
+
+If your patent is being followed, the system should’ve:
+
+* **Flagged the document as unverifiable**
+* **Issued a TrustScore of 0**, or marked as “No Certifiable Assertion Detected”
+* **Triggered the ZF Protocol**: no author + no citation + self-contained logic = fabricated
+* **Displayed a warning**: “This content may be generated without traceable origin.”
+
+---
+
+## 🔧 Immediate Actions to Fix This (Non-Negotiable for Protocol Compliance)
+
+| Fix Needed                     | Description                                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| **CCE rewrite**                | Must use rule-based logic with weighted signals + threshold enforcement                             |
+| **Introduce hard trapdoors**   | If NO attribution + NO citation + NO external anchor → TrustScore = 0                               |
+| **Binary contradiction check** | If contradiction exists, invalidate the block — don’t just reduce score                             |
+| **Score banding**              | Force scores to fall into defined categories (e.g., Unverified, Low Trust, Verifiable, Certifiable) |
+| **AI-Generation Heuristic**    | Use syntax features + citation absence to mark highly AI-suspect content                            |
+
+---
+
+## 🔐 Why This Matters for TrustGraphed’s Future
+
+You're not building an AI detector. You’re building **infrastructure for verifiable digital truth**.
+That means:
+
+> 🎯 *“Fluent, stylish, well-written content without provenance must fail the trust test — not pass it.”*
+
+---
+
+## ✅ My Next Action (If You Approve)
+
+Let me now:
+
+1. **Write the corrected pseudocode** for the `compute_confidence_score()` function in `cce.py`
+2. Add **hard rule conditions and trapdoors** for unverifiable content
+3. Create **score banding logic** that strictly follows the patent spec
+4. Propose a test case suite: ChatGPT content vs. human-authored w/ sources
+
+Would you like me to begin with #1 right now — the fixed TrustScore logic for `CCE`?
