@@ -92,13 +92,15 @@ class TrustGraphedApp {
     }
 
     setupDragAndDrop() {
-        const dropZone = document.querySelector('.file-drop-zone');
+        const dropZone = document.getElementById('dropZone');
         if (!dropZone) return;
 
+        // Prevent default behavior for drag events
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, this.preventDefaults, false);
         });
 
+        // Add visual feedback for drag events
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
         });
@@ -107,13 +109,26 @@ class TrustGraphedApp {
             dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
         });
 
+        // Handle file drop
         dropZone.addEventListener('drop', (e) => this.handleDrop(e), false);
-        dropZone.addEventListener('click', () => this.fileInput?.click());
+        
+        // Handle click to open file dialog - single event listener
+        dropZone.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.openFileDialog();
+        }, false);
     }
 
     preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
+    }
+
+    openFileDialog() {
+        if (this.fileInput) {
+            this.fileInput.click();
+        }
     }
 
     handleDrop(e) {
@@ -151,11 +166,15 @@ class TrustGraphedApp {
     }
 
     async handleFileUpload(e) {
+        console.log('handleFileUpload called');
         const file = e.target.files[0];
         if (!file) {
+            console.log('No file selected, clearing');
             this.clearFile();
             return;
         }
+
+        console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
 
         // Validate file size (10MB limit)
         if (file.size > 10 * 1024 * 1024) {
@@ -164,11 +183,20 @@ class TrustGraphedApp {
             return;
         }
 
-        // Validate file type
-        const allowedTypes = ['.txt', '.pdf', '.docx'];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        // Validate file type more robustly
+        const allowedExtensions = ['.txt', '.pdf', '.docx'];
+        const fileName = file.name.toLowerCase();
+        const fileExtension = '.' + fileName.split('.').pop();
+        
+        // Also check MIME types for additional validation
+        const allowedMimeTypes = [
+            'text/plain',
+            'application/pdf', 
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword'
+        ];
 
-        if (!allowedTypes.includes(fileExtension)) {
+        if (!allowedExtensions.includes(fileExtension) && !allowedMimeTypes.includes(file.type)) {
             this.showError('Unsupported file type. Please upload .txt, .pdf, or .docx files only.');
             this.clearFile();
             return;
@@ -180,6 +208,8 @@ class TrustGraphedApp {
         this.showFileInfo(file.name);
         this.hideError(); // Clear any previous errors
         this.validateInput();
+        
+        console.log('File successfully loaded and validated');
     }
 
 

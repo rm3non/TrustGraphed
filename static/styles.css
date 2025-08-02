@@ -510,6 +510,7 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     background: #f8fafc;
+    user-select: none;
 }
 
 .file-drop-zone:hover {
@@ -526,6 +527,12 @@ body {
     font-size: 2rem;
     margin-bottom: 10px;
     display: block;
+}
+
+.file-format-hint {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 5px 0;
 }
 
 .file-info {

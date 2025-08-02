@@ -174,10 +174,11 @@
                     </div>
 
                     <div id="fileInputSection" class="input-method hidden">
-                        <div class="file-drop-zone">
-                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx" />
+                        <input type="file" id="fileInput" accept=".txt,.pdf,.docx" style="display: none;" />
+                        <div class="file-drop-zone" id="dropZone">
                             <div class="upload-icon">📎</div>
-                            <p>Choose a file (.txt, .pdf, .docx)</p>
+                            <p>Click to choose a file or drag and drop</p>
+                            <p class="file-format-hint">Supported: .txt, .pdf, .docx</p>
                             <p class="file-size-hint">Maximum size: 10MB</p>
                         </div>
                         <div id="fileInfo" class="file-info hidden">
