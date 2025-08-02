@@ -1,276 +1,232 @@
-
 """
-Confidence Computation Engine (CCE)
-Computes confidence scores for assertions based on supporting evidence.
+TrustGraphed Confidence Computation Engine (CCE)
+Analyzes content confidence patterns and linguistic uncertainty markers
 """
 
-from typing import List, Dict, Any
 import re
+import string
+from typing import Dict, List, Any
 
 class ConfidenceComputationEngine:
     def __init__(self):
-        self.name = "Confidence Computation Engine"
-        self.version = "1.0.0"
-        self.confidence_keywords = {
-            "high": ["proven", "established", "confirmed", "verified", "certain", "documented", "according to"],
-            "medium": ["likely", "probable", "suggests", "indicates", "appears", "research shows"],
-            "low": ["might", "could", "possibly", "maybe", "perhaps", "unclear", "seems", "appears to"]
-        }
-        
-        # AI generation indicators
-        self.ai_markers = [
-            "comprehensive overview", "it's important to note", "furthermore", "moreover",
-            "in conclusion", "to summarize", "key takeaways", "in summary",
-            "as an ai", "i don't have access", "i cannot", "i'm not able to"
+        # Uncertainty markers that suggest low confidence
+        self.uncertainty_markers = [
+            'might', 'maybe', 'possibly', 'could be', 'seems like', 'appears to',
+            'suggests', 'indicates', 'likely', 'probably', 'perhaps', 'allegedly',
+            'reportedly', 'supposedly', 'presumably', 'potentially', 'may be',
+            'seems to', 'appears that', 'it is possible', 'it is likely',
+            'some say', 'some believe', 'it is claimed', 'rumored', 'speculated'
         ]
-        
-        # Fabrication red flags
-        self.fabrication_flags = [
-            "studies show", "research indicates", "experts agree", "it is well known",
-            "many believe", "according to sources", "data suggests"
+
+        # High confidence markers
+        self.confidence_markers = [
+            'definitely', 'certainly', 'clearly', 'obviously', 'undoubtedly',
+            'unquestionably', 'absolutely', 'precisely', 'exactly', 'specifically',
+            'confirmed', 'verified', 'proven', 'established', 'documented'
         ]
-    
-    def analyze_language_certainty(self, text: str) -> float:
-        """Analyze language patterns for certainty indicators."""
-        text_lower = text.lower()
-        
-        high_confidence_count = sum(1 for word in self.confidence_keywords["high"] if word in text_lower)
-        medium_confidence_count = sum(1 for word in self.confidence_keywords["medium"] if word in text_lower)
-        low_confidence_count = sum(1 for word in self.confidence_keywords["low"] if word in text_lower)
-        
-        total_indicators = high_confidence_count + medium_confidence_count + low_confidence_count
-        
-        if total_indicators == 0:
-            return 0.3  # Lower default for no confidence indicators
-        
-        weighted_score = (high_confidence_count * 1.0 + medium_confidence_count * 0.6 + low_confidence_count * 0.3) / total_indicators
-        return min(1.0, weighted_score)
-    
-    def check_citation_support(self, text: str, citations: List[str]) -> float:
-        """Check if assertions are supported by citations with hard thresholds."""
-        if not citations or len(citations) == 0:
-            return 0.0  # HARD TRAPDOOR: No citations = 0 score
-        
-        words = len(text.split())
-        if words > 100 and len(citations) == 0:
-            return 0.0  # HARD TRAPDOOR: Long content without citations
-            
-        citation_density = len(citations) / max(1, words / 50)  # Citations per 50 words
-        return min(1.0, citation_density * 0.8 + 0.2)
-    
-    def detect_ai_generation_markers(self, text: str) -> float:
-        """Detect AI generation patterns - returns penalty score (0 = likely AI, 1 = likely human)."""
-        text_lower = text.lower()
-        
-        ai_marker_count = sum(1 for marker in self.ai_markers if marker in text_lower)
-        fabrication_flag_count = sum(1 for flag in self.fabrication_flags if flag in text_lower)
-        
-        # Check for repetitive structures typical of AI
-        sentences = text.split('.')
-        if len(sentences) > 5:
-            # Check for repetitive sentence starts
-            starts = [s.strip()[:20].lower() for s in sentences if s.strip()]
-            unique_starts = len(set(starts))
-            repetition_ratio = unique_starts / len(starts) if starts else 1
-            
-            if repetition_ratio < 0.7:  # High repetition
-                ai_marker_count += 2
-        
-        # Penalty calculation
-        total_penalties = ai_marker_count + fabrication_flag_count
-        if total_penalties == 0:
-            return 1.0
-        
-        # Strong penalty for AI indicators
-        penalty_score = max(0.0, 1.0 - (total_penalties * 0.3))
-        return penalty_score
-    
-    def check_provenance_markers(self, text: str) -> float:
-        """Check for human authorship and provenance markers."""
-        text_lower = text.lower()
-        
-        human_markers = [
-            "i interviewed", "i observed", "i witnessed", "in my experience",
-            "i conducted", "our research", "we found", "our study",
-            "personal communication", "field notes", "interview with"
-        ]
-        
-        source_markers = [
-            "doi:", "isbn:", "http://", "https://", "www.",
-            "published in", "journal of", "proceedings of",
-            "university of", "institute of", "according to [source]"
-        ]
-        
-        human_count = sum(1 for marker in human_markers if marker in text_lower)
-        source_count = sum(1 for marker in source_markers if marker in text_lower)
-        
-        provenance_score = min(1.0, (human_count * 0.3 + source_count * 0.2))
-        return provenance_score
-    
-    def apply_hard_trapdoors(self, text: str, citations: List[str]) -> Dict[str, Any]:
-        """Apply hard rule-based trapdoors that can force score to 0."""
-        trapdoors = {
-            "triggered": False,
-            "reasons": [],
-            "force_score": None
-        }
-        
-        # TRAPDOOR 1: No citations for substantial content
-        if len(text.split()) > 50 and len(citations) == 0:
-            trapdoors["triggered"] = True
-            trapdoors["reasons"].append("Substantial content (>50 words) with zero citations")
-            trapdoors["force_score"] = 0.0
-        
-        # TRAPDOOR 2: High AI generation probability
-        ai_score = self.detect_ai_generation_markers(text)
-        if ai_score < 0.3:
-            trapdoors["triggered"] = True
-            trapdoors["reasons"].append("High probability of AI generation detected")
-            trapdoors["force_score"] = 0.1  # Near-zero but not absolute zero
-        
-        # TRAPDOOR 3: No provenance markers in academic/factual content
-        if len(text.split()) > 100:
-            provenance = self.check_provenance_markers(text)
-            if provenance == 0.0:
-                trapdoors["triggered"] = True
-                trapdoors["reasons"].append("No provenance or authorship markers found")
-                if trapdoors["force_score"] is None:
-                    trapdoors["force_score"] = 0.2
-        
-        # TRAPDOOR 4: Vague attribution without specifics
-        vague_patterns = [
-            r"studies show", r"research indicates", r"experts say",
-            r"it is known", r"sources suggest", r"data shows"
-        ]
-        
-        vague_count = sum(1 for pattern in vague_patterns if re.search(pattern, text.lower()))
-        if vague_count > 2:
-            trapdoors["triggered"] = True
-            trapdoors["reasons"].append(f"Multiple vague attributions ({vague_count}) without specific sources")
-            if trapdoors["force_score"] is None:
-                trapdoors["force_score"] = 0.15
-        
-        return trapdoors
-    
-    def calculate_assertion_penalty(self, content_assertion: str, base_score: float) -> float:
-        """Apply scoring adjustments based on user-declared content assertion."""
-        # Map assertion types to penalty multipliers
-        assertion_multipliers = {
-            "original": 1.0,      # No penalty - user claims full originality
-            "ai": 0.6,           # Significant penalty for admitted AI content  
-            "copied": 0.4,       # Heavy penalty for copied content
-            "mixed": 0.7,        # Moderate penalty for mixed sources
-            "unsure": 0.3        # Heaviest penalty for unclear provenance
-        }
-        
-        multiplier = assertion_multipliers.get(content_assertion, 0.3)
-        adjusted_score = base_score * multiplier
-        
-        # However, if user admits AI/copied but score was already low, 
-        # give slight credit for honesty (minimum 0.05 boost)
-        if content_assertion in ["ai", "copied", "mixed"] and base_score < 0.3:
-            adjusted_score = min(adjusted_score + 0.05, 0.5)
-        
-        return round(adjusted_score, 3)
-    
-    def compute_assertion_confidence(self, assertion: str, citations: List[str]) -> float:
-        """Compute confidence score for a single assertion with hard rules."""
-        # Apply trapdoors first
-        trapdoors = self.apply_hard_trapdoors(assertion, citations)
-        if trapdoors["triggered"] and trapdoors["force_score"] is not None:
-            return trapdoors["force_score"]
-        
-        language_confidence = self.analyze_language_certainty(assertion)
-        citation_support = self.check_citation_support(assertion, citations)
-        ai_authenticity = self.detect_ai_generation_markers(assertion)
-        provenance = self.check_provenance_markers(assertion)
-        
-        # Weighted calculation with authenticity as critical factor
-        confidence = (
-            language_confidence * 0.2 +  # Reduced weight
-            citation_support * 0.4 +     # High weight for citations
-            ai_authenticity * 0.3 +      # High weight for authenticity
-            provenance * 0.1              # Provenance bonus
+
+    def process(self, content: str, assertions: List[str] = None, citations: List[str] = None) -> Dict[str, Any]:
+        """
+        Main processing method for confidence computation.
+        """
+        if assertions is None:
+            assertions = []
+        if citations is None:
+            citations = []
+
+        # Extract confidence signals
+        confidence_signals = self._extract_confidence_signals(content)
+
+        # Analyze assertion confidence
+        assertion_confidence = self._analyze_assertion_confidence(assertions)
+
+        # Calculate overall confidence score
+        overall_confidence = self._calculate_overall_confidence(
+            confidence_signals, assertion_confidence, len(citations)
         )
-        
-        return min(1.0, confidence)
-    
-    def process(self, content: str, assertions: List[str], citations: List[str], content_assertion: str = 'unsure') -> Dict[str, Any]:
-        """Main processing function with enhanced rule-based logic."""
-        if not assertions:
-            return {
-                "module": self.name,
-                "overall_confidence": 0.1,  # Very low for no assertions
-                "assertion_confidences": [],
-                "high_confidence_count": 0,
-                "medium_confidence_count": 0,
-                "low_confidence_count": 0,
-                "average_citation_support": 0.0,
-                "trapdoors_triggered": [],
-                "ai_generation_risk": "unknown",
-                "status": "processed"
-            }
-        
-        # Check global trapdoors
-        global_trapdoors = self.apply_hard_trapdoors(content, citations)
-        
-        assertion_confidences = []
-        trapdoors_triggered = []
-        
-        for assertion in assertions:
-            confidence = self.compute_assertion_confidence(assertion, citations)
-            assertion_confidences.append({
-                "assertion": assertion[:100] + "..." if len(assertion) > 100 else assertion,
-                "confidence": round(confidence, 3)
-            })
-            
-            # Track individual trapdoors
-            assertion_trapdoors = self.apply_hard_trapdoors(assertion, citations)
-            if assertion_trapdoors["triggered"]:
-                trapdoors_triggered.extend(assertion_trapdoors["reasons"])
-        
-        # Categorize confidence levels
-        high_confidence = [c for c in assertion_confidences if c["confidence"] >= 0.8]
-        medium_confidence = [c for c in assertion_confidences if 0.5 <= c["confidence"] < 0.8]
-        low_confidence = [c for c in assertion_confidences if c["confidence"] < 0.5]
-        
-        # Calculate overall confidence with global penalties
-        base_confidence = sum(c["confidence"] for c in assertion_confidences) / len(assertion_confidences)
-        
-        # Apply global trapdoor
-        if global_trapdoors["triggered"] and global_trapdoors["force_score"] is not None:
-            overall_confidence = global_trapdoors["force_score"]
-            trapdoors_triggered.extend(global_trapdoors["reasons"])
-        else:
-            overall_confidence = base_confidence
-        
-        # Apply content assertion adjustments
-        assertion_penalty = self.calculate_assertion_penalty(content_assertion, overall_confidence)
-        overall_confidence = assertion_penalty
-        
-        # Determine AI generation risk
-        ai_score = self.detect_ai_generation_markers(content)
-        if ai_score < 0.3:
-            ai_risk = "HIGH"
-        elif ai_score < 0.6:
-            ai_risk = "MEDIUM"
-        else:
-            ai_risk = "LOW"
-        
-        citation_support = self.check_citation_support(content, citations)
-        
+
         return {
-            "module": self.name,
-            "overall_confidence": round(overall_confidence, 3),
-            "assertion_confidences": assertion_confidences[:5],  # Limit for demo
-            "high_confidence_count": len(high_confidence),
-            "medium_confidence_count": len(medium_confidence),
-            "low_confidence_count": len(low_confidence),
-            "average_citation_support": round(citation_support, 3),
-            "trapdoors_triggered": list(set(trapdoors_triggered))[:3],  # Unique, limited
-            "ai_generation_risk": ai_risk,
-            "provenance_score": round(self.check_provenance_markers(content), 3),
-            "content_assertion": content_assertion,
-            "assertion_penalty_applied": True if content_assertion != 'original' else False,
-            "status": "processed"
+            'overall_confidence': overall_confidence,
+            'confidence_signals': confidence_signals,
+            'assertion_confidence': assertion_confidence,
+            'high_confidence_count': len([a for a in assertion_confidence if a > 0.7]),
+            'low_confidence_count': len([a for a in assertion_confidence if a < 0.4]),
+            'uncertainty_markers_found': confidence_signals.get('uncertainty_count', 0),
+            'confidence_markers_found': confidence_signals.get('confidence_count', 0)
         }
+
+    def _extract_confidence_signals(self, content: str) -> Dict[str, Any]:
+        """Extract confidence-related signals from content."""
+        content_lower = content.lower()
+
+        # Count uncertainty markers
+        uncertainty_count = sum(1 for marker in self.uncertainty_markers 
+                               if marker in content_lower)
+
+        # Count confidence markers
+        confidence_count = sum(1 for marker in self.confidence_markers 
+                              if marker in content_lower)
+
+        # Calculate confidence ratio
+        total_markers = uncertainty_count + confidence_count
+        confidence_ratio = confidence_count / total_markers if total_markers > 0 else 0.5
+
+        # Analyze hedging language
+        hedging_patterns = [
+            r'\bmight\s+be\b', r'\bcould\s+be\b', r'\bmay\s+be\b',
+            r'\bseems?\s+to\b', r'\bappears?\s+to\b', r'\btends?\s+to\b'
+        ]
+
+        hedging_count = sum(len(re.findall(pattern, content_lower)) 
+                           for pattern in hedging_patterns)
+
+        return {
+            'uncertainty_count': uncertainty_count,
+            'confidence_count': confidence_count,
+            'confidence_ratio': confidence_ratio,
+            'hedging_count': hedging_count,
+            'total_markers': total_markers
+        }
+
+    def _analyze_assertion_confidence(self, assertions: List[str]) -> List[float]:
+        """Analyze confidence level of individual assertions."""
+        confidence_scores = []
+
+        for assertion in assertions:
+            assertion_lower = assertion.lower()
+
+            # Check for uncertainty markers
+            uncertainty_score = sum(1 for marker in self.uncertainty_markers 
+                                  if marker in assertion_lower)
+
+            # Check for confidence markers
+            confidence_score = sum(1 for marker in self.confidence_markers 
+                                 if marker in assertion_lower)
+
+            # Base confidence (neutral)
+            base_confidence = 0.6
+
+            # Adjust based on markers
+            if uncertainty_score > 0:
+                base_confidence -= (uncertainty_score * 0.15)
+            if confidence_score > 0:
+                base_confidence += (confidence_score * 0.2)
+
+            # Clamp between 0 and 1
+            final_confidence = max(0.0, min(1.0, base_confidence))
+            confidence_scores.append(final_confidence)
+
+        return confidence_scores
+
+    def _calculate_overall_confidence(self, signals: Dict[str, Any], 
+                                    assertion_confidence: List[float], 
+                                    citation_count: int) -> float:
+        """Calculate overall confidence score."""
+        if not assertion_confidence:
+            base_confidence = 0.5
+        else:
+            base_confidence = sum(assertion_confidence) / len(assertion_confidence)
+
+        # Adjust for uncertainty markers
+        uncertainty_penalty = min(signals['uncertainty_count'] * 0.05, 0.3)
+        base_confidence -= uncertainty_penalty
+
+        # Boost for confidence markers
+        confidence_boost = min(signals['confidence_count'] * 0.03, 0.2)
+        base_confidence += confidence_boost
+
+        # Citation boost
+        citation_boost = min(citation_count * 0.1, 0.25)
+        base_confidence += citation_boost
+
+        # Hedging penalty
+        hedging_penalty = min(signals['hedging_count'] * 0.08, 0.25)
+        base_confidence -= hedging_penalty
+
+        return max(0.0, min(1.0, base_confidence))
+
+def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> dict:
+    """
+    Compute a TrustScore based on extracted signals and user-declared assertion type.
+
+    Parameters:
+        signals (dict): A dictionary of extracted content signals:
+            - assertions: int
+            - citations: int
+            - contradictions: int
+            - author_detected: bool
+            - ai_likelihood: float (0-1)
+        assertion_type (str): User declaration - original, ai, copied, mixed, unsure.
+
+    Returns:
+        dict: { final_score, breakdown, band }
+    """
+
+    # ---------- Base Score from Content Signals ----------
+    base_score = 100
+
+    # --- Citation Weight (Max 40 Points) ---
+    if signals.get("citations", 0) > 0:
+        citation_score = min(signals["citations"] * 8, 40)
+    else:
+        citation_score = 0
+    base_score = citation_score
+
+    # --- Author/Metadata Bonus (Max +10) ---
+    if signals.get("author_detected", False):
+        base_score += 10
+
+    # --- Contradiction Penalty (Max -30) ---
+    contradiction_penalty = min(signals.get("contradictions", 0) * 10, 30)
+    base_score -= contradiction_penalty
+
+    # --- AI Likelihood Penalty (Max -20) ---
+    ai_penalty = int(signals.get("ai_likelihood", 0) * 20)
+    base_score -= ai_penalty
+
+    # ---------- Trapdoor Logic (Zero-Fabrication) ----------
+    if signals.get("citations", 0) == 0 and not signals.get("author_detected", False):
+        # No provenance = score floor
+        base_score = min(base_score, 25)
+
+    # ---------- Assertion Type Adjustment ----------
+    base_score = apply_assertion_penalty(base_score, assertion_type)
+
+    # Clamp final score between 0 and 100
+    final_score = max(0, min(100, round(base_score, 2)))
+
+    # ---------- Determine Score Band ----------
+    if final_score >= 75:
+        band = "High Trust"
+    elif final_score >= 50:
+        band = "Verified"
+    elif final_score >= 25:
+        band = "Low Trust"
+    else:
+        band = "Unverified"
+
+    # ---------- Return Detailed Breakdown ----------
+    return {
+        "final_score": final_score,
+        "band": band,
+        "breakdown": {
+            "citations_score": citation_score,
+            "contradiction_penalty": contradiction_penalty,
+            "ai_penalty": ai_penalty,
+            "assertion_type": assertion_type
+        }
+    }
+
+
+def apply_assertion_penalty(score: float, assertion_type: str) -> float:
+    """
+    Adjust score based on user-declared assertion type.
+    """
+    penalties = {
+        "original": 1.0,
+        "ai": 0.85,
+        "copied": 0.7,
+        "mixed": 0.8,
+        "unsure": 0.6
+    }
+    return score * penalties.get(assertion_type.lower(), 0.7)

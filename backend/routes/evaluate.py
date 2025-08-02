@@ -206,8 +206,8 @@ def evaluate_content():
         zfp_result = zfp.process(content)
         results['zfp_result'] = zfp_result
 
-        # Step 5: Generate final trust score
-        score_result = score_engine.process(results)
+        # Step 5: Generate final trust score with assertion type
+        score_result = score_engine.process(results, content_assertion)
         results['score_result'] = score_result
 
         # Step 6: Generate certificate
