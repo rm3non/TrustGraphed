@@ -136,7 +136,7 @@ body {
 
 /* Hero Section */
 .hero-section {
-    padding: 8rem 2rem 4rem;
+    padding: 12rem 2rem 4rem;
     text-align: center;
     max-width: 1200px;
     margin: 0 auto;
@@ -267,82 +267,7 @@ body {
     margin: 0.5rem 0;
 }
 
-/* Problem-Solution Section */
-.problem-solution {
-    padding: 4rem 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
 
-.section-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    margin-top: 2rem;
-}
-
-.problem-side, .solution-side {
-    padding: 2.5rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 16px;
-    box-shadow: var(--shadow-dark);
-}
-
-.problem-side {
-    border-left: 4px solid #ef4444;
-}
-
-.solution-side {
-    border-left: 4px solid #10b981;
-}
-
-.problem-icon, .solution-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-    display: block;
-}
-
-.problem-side h2, .solution-side h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-}
-
-.problem-side p, .solution-side p {
-    color: var(--text-secondary);
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-}
-
-.problem-list, .solution-list {
-    list-style: none;
-    padding: 0;
-}
-
-.problem-list li, .solution-list li {
-    padding: 0.75rem 0;
-    color: var(--text-secondary);
-    position: relative;
-    padding-left: 2rem;
-}
-
-.problem-list li::before {
-    content: "×";
-    position: absolute;
-    left: 0;
-    color: #ef4444;
-    font-weight: bold;
-}
-
-.solution-list li::before {
-    content: "✓";
-    position: absolute;
-    left: 0;
-    color: #10b981;
-    font-weight: bold;
-}
 
 /* Architecture Section */
 .architecture-section {
@@ -911,11 +836,6 @@ body {
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .section-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
     .modules-grid {
         grid-template-columns: 1fr;
     }
