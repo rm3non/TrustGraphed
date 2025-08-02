@@ -1,0 +1,63 @@
+Here’s a **ready-to-use Replit prompt snippet** for adding an ideal, protocol-grade disclaimer — covering both **typed and uploaded content**.
+
+This version assumes you’re using Flask for the backend and HTML/JS for the frontend (as in your current setup).
+
+---
+
+## ✅ 🔧 Replit HTML Snippet (Add Below the TrustScore Display)
+
+```html
+<div class="disclaimer-card" style="margin-top: 2rem; padding: 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; color: #4b5563;">
+  <strong>📌 TrustGraphed™ Disclaimer</strong>
+  <p style="margin-top: 0.5rem;">
+    The <strong>TrustScore</strong> displayed above is a protocol-based evaluation of content trustworthiness. It reflects our system's analysis of logical structure, citation presence, signal integrity, and declared authorship intent.
+  </p>
+  <p style="margin-top: 0.5rem;">
+    This score applies equally to both <strong>manually typed</strong> and <strong>uploaded</strong> documents (.txt, .pdf, .docx). 
+    All files are processed locally within your session and are <strong>not stored or transmitted</strong> externally.
+  </p>
+  <p style="margin-top: 0.5rem;">
+    Please note: the TrustScore <strong>does not verify factual correctness</strong>, detect plagiarism, or assert legal ownership. It should be used as a <strongguidance metric</strong> to evaluate content integrity — not as a legal or academic certificate.
+  </p>
+  <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #9ca3af;">
+    Use of this tool implies acceptance of TrustGraphed's <a href="/terms.html" style="color: #3b82f6;">Terms</a> and <a href="/privacy.html" style="color: #3b82f6;">Privacy Policy</a>.
+  </p>
+</div>
+```
+
+---
+
+## ✅ Optional: Link This to the TrustScore Panel
+
+You can add a small ℹ️ icon next to your TrustScore that expands this disclaimer as a modal or accordion:
+
+```html
+<span title="What does this score mean?" style="cursor: help;">ℹ️</span>
+```
+
+Or trigger it on hover with JavaScript.
+
+---
+
+## 🛡️ Pro Tip (Optional Add-On)
+
+In your Flask route, you can also tag whether a user submitted a file or typed content and reflect that in the results panel:
+
+```python
+input_type = "uploaded file" if 'file' in request.files else "typed content"
+```
+
+Then show:
+
+```html
+<p class="text-sm text-gray-500">Evaluated from: <strong>{{ input_type }}</strong></p>
+```
+
+---
+
+Would you like me to:
+
+* Write a matching `terms.html` and `privacy.html` (Replit-compatible)?
+* Add a toggle/accordion version of the disclaimer (less space, more interactive)?
+
+You're now making TrustGraphed feel like a **professional-grade platform**, not just a demo.
