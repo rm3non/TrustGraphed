@@ -6,6 +6,9 @@ TrustGraphed Evaluation Routes
 from flask import Blueprint, request, jsonify
 import sys
 import os
+import tempfile
+import PyPDF2
+import docx
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.sdg import SourceDataGrappler
@@ -17,21 +20,71 @@ from utils.certificate import CertificateGenerator
 
 evaluate_bp = Blueprint('evaluate', __name__)
 
+def extract_text_from_file(file):
+    """Extract text content from uploaded file."""
+    filename = file.filename.lower()
+    
+    try:
+        if filename.endswith('.txt') or filename.endswith('.md'):
+            return file.read().decode('utf-8')
+        
+        elif filename.endswith('.pdf'):
+            content = ""
+            pdf_reader = PyPDF2.PdfReader(file)
+            for page in pdf_reader.pages:
+                content += page.extract_text() + "\n"
+            return content
+        
+        elif filename.endswith(('.docx', '.doc')):
+            if filename.endswith('.docx'):
+                doc = docx.Document(file)
+                content = ""
+                for paragraph in doc.paragraphs:
+                    content += paragraph.text + "\n"
+                return content
+            else:
+                # For .doc files, we'll treat as text for now
+                return file.read().decode('utf-8', errors='ignore')
+        
+        else:
+            raise ValueError(f"Unsupported file type: {filename}")
+            
+    except Exception as e:
+        raise ValueError(f"Failed to extract text from file: {str(e)}")
+
+evaluate_bp = Blueprint('evaluate', __name__)
+
 @evaluate_bp.route('/evaluate', methods=['POST'])
 def evaluate_content():
     """
     Main evaluation endpoint - processes content through all 6 TrustGraphed modules.
     """
     try:
-        # Get content from request
-        if not request.is_json:
-            return jsonify({"error": "Content-Type must be application/json"}), 400
+        # Handle both file uploads and text input
+        content = ""
         
-        data = request.get_json()
-        if not data or 'content' not in data:
-            return jsonify({"error": "Missing 'content' field in request body"}), 400
+        if 'file' in request.files:
+            # File upload mode
+            uploaded_file = request.files['file']
+            
+            if uploaded_file.filename == '':
+                return jsonify({"error": "No file selected"}), 400
+            
+            # Extract text from file
+            try:
+                content = extract_text_from_file(uploaded_file)
+            except ValueError as e:
+                return jsonify({"error": str(e)}), 400
+                
+        elif request.is_json:
+            # Text input mode
+            data = request.get_json()
+            if not data or 'content' not in data:
+                return jsonify({"error": "Missing 'content' field in request body"}), 400
+            content = data['content']
+        else:
+            return jsonify({"error": "Please provide content via JSON or file upload"}), 400
         
-        content = data['content']
         if not content or len(content.strip()) < 10:
             return jsonify({"error": "Content must be at least 10 characters long"}), 400
         

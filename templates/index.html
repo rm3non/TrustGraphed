@@ -17,13 +17,35 @@
         <main>
             <section class="input-section">
                 <h2>Evaluate Content</h2>
-                <form id="evaluationForm">
-                    <textarea 
-                        id="contentInput" 
-                        placeholder="Paste your content here for trust evaluation... (minimum 10 characters)"
-                        rows="8"
-                        required
-                    ></textarea>
+                <div class="input-tabs">
+                    <button type="button" id="textTab" class="tab-btn active">Text Input</button>
+                    <button type="button" id="fileTab" class="tab-btn">File Upload</button>
+                </div>
+                
+                <form id="evaluationForm" enctype="multipart/form-data">
+                    <div id="textInputSection" class="input-method active">
+                        <textarea 
+                            id="contentInput" 
+                            placeholder="Paste your content here for trust evaluation... (minimum 10 characters)"
+                            rows="8"
+                        ></textarea>
+                    </div>
+                    
+                    <div id="fileInputSection" class="input-method hidden">
+                        <div class="file-upload-area">
+                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx,.doc,.md" hidden>
+                            <div id="fileDropZone" class="file-drop-zone">
+                                <div class="upload-icon">📄</div>
+                                <p>Click to upload or drag & drop</p>
+                                <small>Supports: TXT, PDF, DOCX, DOC, MD</small>
+                            </div>
+                            <div id="fileInfo" class="file-info hidden">
+                                <span id="fileName"></span>
+                                <button type="button" id="removeFile">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <button type="submit" id="analyzeBtn">
                         <span id="btnText">Analyze Content</span>
                         <span id="loadingSpinner" class="spinner hidden">⟳</span>
