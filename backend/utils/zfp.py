@@ -1,4 +1,3 @@
-
 """
 Zero-Fabrication Protocol (ZFP)
 Flags hallucinations or AI-generated anomalies.
@@ -22,12 +21,12 @@ class ZeroFabricationProtocol:
             r'studies show that',      # Unsupported claims
             r'it is widely known',     # Appeal to common knowledge
         ]
-    
+
     def detect_ai_artifacts(self, content: str) -> List[Dict[str, Any]]:
         """Detect potential AI-generated content artifacts."""
         artifacts = []
         content_lower = content.lower()
-        
+
         for indicator in self.fabrication_indicators:
             if indicator in content_lower:
                 artifacts.append({
@@ -36,13 +35,13 @@ class ZeroFabricationProtocol:
                     "severity": "high",
                     "description": "Direct AI generation indicator found"
                 })
-        
+
         return artifacts
-    
+
     def detect_suspicious_patterns(self, content: str) -> List[Dict[str, Any]]:
         """Detect patterns that might indicate fabricated information."""
         suspicious_items = []
-        
+
         for pattern in self.suspicious_patterns:
             matches = re.finditer(pattern, content, re.IGNORECASE)
             for match in matches:
@@ -53,14 +52,14 @@ class ZeroFabricationProtocol:
                     "severity": "medium",
                     "description": "Pattern associated with potential fabrication"
                 })
-        
+
         return suspicious_items
-    
+
     def analyze_fact_density(self, content: str) -> float:
         """Analyze the density of factual claims vs supporting evidence."""
         words = content.split()
         total_words = len(words)
-        
+
         # Count potential factual claims (sentences with numbers, dates, names)
         fact_patterns = [
             r'\b\d+%\b',           # Percentages
@@ -68,26 +67,54 @@ class ZeroFabricationProtocol:
             r'\b[A-Z][a-z]+ [A-Z][a-z]+\b',  # Proper names
             r'\$\d+',              # Money amounts
         ]
-        
+
         fact_count = 0
         for pattern in fact_patterns:
             fact_count += len(re.findall(pattern, content))
-        
+
         fact_density = fact_count / max(1, total_words / 20)  # Facts per ~20 words
         return min(1.0, fact_density)
-    
+
+    def calculate_authenticity_score(self, flags: List[Dict[str, Any]], fact_density: float) -> float:
+        """Calculate overall authenticity score with stricter penalties."""
+        base_score = 1.0
+
+        # Count flags by severity
+        high_severity_count = sum(1 for flag in flags if flag.get("severity") == "high")
+        medium_severity_count = sum(1 for flag in flags if flag.get("severity") == "medium")
+        low_severity_count = sum(1 for flag in flags if flag.get("severity") == "low")
+
+        # Apply harsher penalties
+        base_score -= high_severity_count * 0.4    # Increased from 0.2
+        base_score -= medium_severity_count * 0.25  # Increased from 0.1
+        base_score -= low_severity_count * 0.1      # Increased from 0.05
+
+        # Stricter fact density penalty
+        if fact_density < 0.3:  # Very low fact density
+            base_score -= 0.5
+        elif fact_density < 0.5:
+            density_penalty = (0.5 - fact_density) * 0.6
+            base_score -= density_penalty
+
+        # Additional penalty for multiple AI indicators
+        if high_severity_count >= 2:
+            base_score -= 0.3  # Strong AI generation signal
+
+        return max(0.0, base_score)
+
     def process(self, content: str) -> Dict[str, Any]:
         """Main processing function."""
         ai_artifacts = self.detect_ai_artifacts(content)
         suspicious_patterns = self.detect_suspicious_patterns(content)
         fact_density = self.analyze_fact_density(content)
-        
+        authenticity_score = self.calculate_authenticity_score(ai_artifacts + suspicious_patterns, fact_density)
+
         total_flags = len(ai_artifacts) + len(suspicious_patterns)
-        
+
         # Calculate fabrication risk score (lower is better)
         fabrication_risk = min(1.0, total_flags * 0.2 + (1.0 - fact_density) * 0.3)
-        authenticity_score = max(0.0, 1.0 - fabrication_risk)
-        
+        #authenticity_score = max(0.0, 1.0 - fabrication_risk)
+
         return {
             "module": self.name,
             "ai_artifacts": ai_artifacts,

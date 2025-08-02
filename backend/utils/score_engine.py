@@ -31,7 +31,37 @@ class TrustScoreEngine:
             return 0.5
     
     def calculate_weighted_score(self, results: Dict[str, Any]) -> float:
-        """Calculate weighted trust score from all module results."""
+        """Calculate weighted trust score with hard enforcement rules."""
+        # CRITICAL ENFORCEMENT RULES - Check for deal-breakers first
+        
+        # Rule 1: Zero citations with substantial content = untrusted
+        if "cce_result" in results:
+            cce = results["cce_result"]
+            if cce.get("average_citation_support", 0) == 0.0 and cce.get("high_confidence_count", 0) == 0:
+                return 0.1  # Near-zero score for uncited content
+        
+        # Rule 2: High AI generation risk = untrusted
+        if "cce_result" in results:
+            cce = results["cce_result"]
+            if cce.get("ai_generation_risk", "LOW") == "HIGH":
+                return 0.15  # Very low score for likely AI content
+        
+        # Rule 3: Multiple trapdoors triggered = untrusted
+        if "cce_result" in results:
+            cce = results["cce_result"]
+            trapdoors = cce.get("trapdoors_triggered", [])
+            if len(trapdoors) >= 2:
+                return 0.2  # Low score for multiple red flags
+        
+        # Rule 4: Low authenticity with no citations = fabricated
+        if "zfp_result" in results and "cce_result" in results:
+            zfp = results["zfp_result"]
+            cce = results["cce_result"]
+            if (zfp.get("authenticity_score", 1) < 0.3 and 
+                cce.get("average_citation_support", 0) == 0.0):
+                return 0.05  # Extremely low for likely fabrication
+        
+        # If no deal-breakers, calculate weighted score
         total_score = 0.0
         total_weight = 0.0
         
@@ -43,22 +73,32 @@ class TrustScoreEngine:
         
         # Normalize by actual weights used
         if total_weight > 0:
-            return total_score / total_weight
+            base_score = total_score / total_weight
+            
+            # Apply additional penalties for borderline cases
+            if "cce_result" in results:
+                cce = results["cce_result"]
+                if cce.get("ai_generation_risk", "LOW") == "MEDIUM":
+                    base_score *= 0.7  # 30% penalty for medium AI risk
+            
+            return base_score
         else:
-            return 0.5  # Default score
+            return 0.1  # Very low default score
     
     def determine_trust_level(self, score: float) -> str:
-        """Determine trust level based on numerical score."""
-        if score >= 0.9:
+        """Determine trust level based on numerical score with stricter thresholds."""
+        if score >= 0.85:
             return "VERY HIGH"
-        elif score >= 0.75:
+        elif score >= 0.65:
             return "HIGH"
-        elif score >= 0.6:
+        elif score >= 0.45:
             return "MODERATE"
-        elif score >= 0.4:
+        elif score >= 0.25:
             return "LOW"
-        else:
+        elif score >= 0.1:
             return "VERY LOW"
+        else:
+            return "UNVERIFIABLE"
     
     def generate_detailed_explanation(self, results: Dict[str, Any], trust_score: float) -> Dict[str, Any]:
         """Generate detailed explanations for the trust score computation."""
