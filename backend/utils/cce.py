@@ -231,7 +231,7 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
         "citations_contribution": citation_score if signals.get("citations", 0) > 0 else 0,
         "author_bonus": 10 if signals.get("author_detected", False) else 0,
         "contradiction_penalty": contradiction_penalty,
-        "ai_likelihood_penalty": ai_penalty,
+        "transparency_alignment_penalty": transparency_alignment_penalty,
         "transparency_multiplier": transparency_multiplier,
         "final_score": final_score
     }
