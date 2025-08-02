@@ -522,6 +522,19 @@ class TrustGraphedApp {
             }
         }
 
+        // Add TrustGraphed timestamp line
+        const trustScoreCard = document.querySelector('.trust-score-card');
+        if (trustScoreCard && !document.querySelector('.trustgraphed-timestamp')) {
+            const timestamp = new Date();
+            const timestampDiv = document.createElement('div');
+            timestampDiv.className = 'trustgraphed-timestamp';
+            timestampDiv.innerHTML = `
+                This document was <strong>TrustGraphed</strong> on ${timestamp.toLocaleDateString()} at ${timestamp.toLocaleTimeString()} 
+                with a ${trust_evaluation.trust_level} trust rating of ${Math.round(trust_evaluation.trust_score * 100)}%
+            `;
+            trustScoreCard.appendChild(timestampDiv);
+        }
+
         this.showResults();
     }
 

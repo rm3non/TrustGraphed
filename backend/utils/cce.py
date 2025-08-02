@@ -168,28 +168,28 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
     breakdown = {}
 
     # ========== BASE SCORING (0-100 points) ==========
-    base_score = 60  # Start with higher neutral baseline for more reasonable ranges
+    base_score = 70  # Higher baseline for more reasonable ranges
 
-    # ========== ASSERTION SCORING (Max +20 points) ==========
+    # ========== ASSERTION SCORING (Max +15 points) ==========
     assertions = signals.get("assertions", 0)
     if assertions > 0:
-        # More generous assertion scoring with better progression
-        assertion_score = min(assertions * 2.5, 20)
+        # More generous assertion scoring
+        assertion_score = min(assertions * 3, 15)
         base_score += assertion_score
         breakdown["assertion_contribution"] = assertion_score
 
-    # ========== CITATION SCORING (Max +20 points) ==========
+    # ========== CITATION SCORING (Max +15 points) ==========
     citations = signals.get("citations", 0)
     if citations > 0:
-        # Improved citation scoring with better progression
+        # More generous citation scoring
         if citations == 1:
-            citation_score = 10
+            citation_score = 8
         elif citations == 2:
-            citation_score = 15
+            citation_score = 12
         elif citations >= 3:
-            citation_score = 20
+            citation_score = 15
         else:
-            citation_score = min(citations * 6, 20)
+            citation_score = min(citations * 5, 15)
 
         base_score += citation_score
         breakdown["citation_contribution"] = citation_score
@@ -217,20 +217,20 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
         breakdown["transparency_alignment_penalty"] = transparency_penalty
         base_score -= transparency_penalty
 
-    # ========== HARD TRAPDOORS (Zero-Fabrication Enforcement) ==========
-    # Trapdoor 1: No citations + No author = Fabrication risk
+    # ========== MODIFIED TRAPDOORS (Less Harsh) ==========
+    # Trapdoor 1: No citations + No author = Penalty rather than hard cap
     if citations == 0 and not signals.get("author_detected", False):
         if assertion_type.lower() in ["ai", "mixed"]:
-            # More lenient for honest AI declaration
-            base_score = min(base_score, 40)
+            # Light penalty for honest AI declaration
+            base_score = min(base_score, 65)
         else:
-            # Standard trapdoor for undeclared content
-            base_score = min(base_score, 25)
+            # Moderate penalty for undeclared content
+            base_score = min(base_score, 50)
         breakdown["trapdoor_applied"] = True
 
-    # Trapdoor 2: High AI + Original claim = Max 30 points
+    # Trapdoor 2: High AI + Original claim = Moderate penalty
     if assertion_type.lower() == "original" and ai_likelihood > 0.7:
-        base_score = min(base_score, 30)
+        base_score = min(base_score, 45)
         breakdown["trapdoor_applied"] = True
 
     # ========== ASSERTION TYPE TRANSPARENCY MULTIPLIERS ==========
