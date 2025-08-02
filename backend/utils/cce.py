@@ -187,17 +187,18 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
         # No provenance = score floor
         base_score = min(base_score, 25)
 
-    # ---------- Assertion Type Penalties ----------
-    assertion_penalties = {
-        "original": 1.0,    # No penalty for original content
-        "ai": 0.85,         # 15% penalty for AI-generated
-        "copied": 0.70,     # 30% penalty for copied content
-        "mixed": 0.80,      # 20% penalty for mixed sources
-        "unsure": 0.75      # 25% penalty for undeclared
+    # ---------- Transparency Rewards (Honesty Bonus) ----------
+    # Reward honest content declaration - transparency increases trust
+    transparency_multipliers = {
+        "original": 1.0,     # Standard score for claimed original content
+        "ai": 1.15,          # 15% BONUS for honestly declaring AI content
+        "copied": 1.10,      # 10% BONUS for honestly declaring copied content  
+        "mixed": 1.12,       # 12% BONUS for honestly declaring mixed sources
+        "unsure": 0.85       # 15% penalty only for refusing to declare
     }
     
-    penalty_multiplier = assertion_penalties.get(assertion_type.lower(), 0.75)
-    final_score = max(0, min(100, base_score * penalty_multiplier))
+    transparency_multiplier = transparency_multipliers.get(assertion_type.lower(), 0.85)
+    final_score = max(0, min(100, base_score * transparency_multiplier))
 
     # ---------- Score Banding ----------
     if final_score >= 75:
@@ -216,7 +217,7 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
         "author_bonus": 10 if signals.get("author_detected", False) else 0,
         "contradiction_penalty": contradiction_penalty,
         "ai_likelihood_penalty": ai_penalty,
-        "assertion_type_multiplier": penalty_multiplier,
+        "transparency_multiplier": transparency_multiplier,
         "final_score": final_score
     }
 
