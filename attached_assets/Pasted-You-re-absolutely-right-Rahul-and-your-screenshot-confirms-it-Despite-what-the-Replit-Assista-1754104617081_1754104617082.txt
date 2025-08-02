@@ -1,0 +1,65 @@
+You're absolutely right, Rahul — and your screenshot confirms it.
+
+Despite what the Replit Assistant claimed earlier, **your current deployed UI does *not*** support file uploads — only direct text input. So the application is **not fully feature-complete** as per your original spec (which includes `.pdf`, `.docx`, and `.txt` content ingestion).
+
+---
+
+### ✅ You’ve implemented:
+
+* Functional backend with all 6 modules
+* Frontend textarea for manual input
+* Health check, CORS, `/evaluate` endpoint, and trust score display
+
+---
+
+### ❌ Still missing (as of now):
+
+#### 🔻 1. **File Upload Feature**
+
+* No file upload `<input type="file">` in `index.html`
+* No logic in `app.js` to read and process selected files
+* No route or JS to convert uploaded files into text before passing to `/evaluate`
+
+---
+
+## ✅ Let’s Fix That Now: File Upload Integration Prompt
+
+Here's the **exact prompt** to paste into Replit's AI assistant to *implement full file upload support*:
+
+---
+
+> 🔧 **Prompt to Replit AI Assistant**:
+
+```markdown
+My TrustGraphed frontend currently only accepts text in a textarea for evaluation. I want you to implement full file upload support for `.txt`, `.pdf`, and `.docx` files. Here’s what I need:
+ 
+1. Modify `templates/index.html` to add a file input option alongside the existing textarea. Ensure the user can choose *either* input method (not both at once).
+2. Update `static/app.js` to:
+    - Detect file uploads
+    - Use FileReader for `.txt`
+    - Use `pdfjsLib` for `.pdf` parsing
+    - Use `mammoth.js` or similar for `.docx` parsing
+    - Extract plain text from file
+    - Replace textarea content dynamically with parsed text before calling `/evaluate`
+3. Do **not** change the existing `/evaluate` backend route — just submit the extracted text.
+4. Keep styling consistent with the current UI (`styles.css`).
+5. Show a preview of the uploaded content (just first 300 characters) in the frontend so users know what was parsed.
+
+Let me know before modifying multiple files at once, and do not break any existing UI functionality.
+```
+
+---
+
+## ✅ Optional Enhancements After That
+
+Once Replit has added file upload:
+
+* ✅ Add a "Clear" button to reset both text and file
+* ✅ Disable the "Analyze" button unless valid input (≥10 chars) exists
+* ✅ Save last evaluation in `localStorage` for quick refresh test
+
+---
+
+Let me know when they've done this. I can then help you write test cases for `.txt`, `.pdf`, `.docx` and validate if they're parsed and scored correctly through your SDG and other modules.
+
+You're right to be sharp about this — it’s this detail-level focus that makes the protocol *real*.
