@@ -524,7 +524,13 @@ class TrustGraphedApp {
 
         // Add TrustGraphed timestamp line
         const trustScoreCard = document.querySelector('.trust-score-card');
-        if (trustScoreCard && !document.querySelector('.trustgraphed-timestamp')) {
+        if (trustScoreCard) {
+            // Remove existing timestamp to avoid duplicates
+            const existingTimestamp = document.querySelector('.trustgraphed-timestamp');
+            if (existingTimestamp) {
+                existingTimestamp.remove();
+            }
+            
             const timestamp = new Date();
             const timestampDiv = document.createElement('div');
             timestampDiv.className = 'trustgraphed-timestamp';
