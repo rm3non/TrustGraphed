@@ -117,11 +117,11 @@ class TrustScoreEngine:
 
         # Assertion type insight
         assertion_insights = {
-            "original": "Content declared as fully original - standard trust evaluation applied",
-            "ai": "🔍 TRANSPARENCY BONUS: Honest AI declaration increases trust (+20%) and reduces AI penalties",
-            "copied": "🔍 TRANSPARENCY BONUS: Honest copied content declaration increases trust (+15%)",
-            "mixed": "🔍 TRANSPARENCY BONUS: Honest mixed sources declaration increases trust (+18%) and reduces AI penalties",
-            "unsure": "⚠️ Content source undeclared - transparency would improve trust score significantly"
+            "original": "Content declared as fully original - evaluating claim consistency",
+            "ai": "✅ TRANSPARENCY: AI usage openly declared - builds reader trust through honesty",
+            "copied": "✅ TRANSPARENCY: Copied content openly declared - builds reader trust through honesty",
+            "mixed": "✅ TRANSPARENCY: Mixed sources openly declared - builds reader trust through honesty",
+            "unsure": "⚠️ Content source undeclared - readers cannot assess information origin"
         }
         insights.append(assertion_insights.get(assertion_type, "Unknown content declaration"))
 
@@ -141,13 +141,21 @@ class TrustScoreEngine:
         elif confidence > 0.7:
             insights.append("High confidence language - assertions appear well-supported")
 
+        # AI Detection vs Declaration Alignment
+        ai_likelihood = module_results.get('zfp_result', {}).get('authenticity_score', 1.0)
+        ai_likelihood = 1.0 - ai_likelihood  # Convert to AI likelihood
+        
+        if assertion_type.lower() == "original" and ai_likelihood > 0.6:
+            insights.append("⚠️ TRANSPARENCY MISMATCH: High AI characteristics detected but claimed as original")
+        elif assertion_type.lower() in ["ai", "mixed"] and ai_likelihood > 0.4:
+            insights.append("✅ DECLARATION ALIGNED: AI characteristics match transparent declaration")
+        elif assertion_type.lower() in ["ai", "mixed"] and ai_likelihood < 0.3:
+            insights.append("ℹ️ OVER-DISCLOSURE: Minimal AI characteristics detected despite AI declaration")
+        
         # Fabrication insights
-        zfp_score = module_results.get('zfp_result', {}).get('authenticity_score', 1.0)
         flags = module_results.get('zfp_result', {}).get('total_flags', 0)
         if flags > 0:
-            insights.append(f"Detected {flags} potential fabrication indicators")
-        if zfp_score < 0.5:
-            insights.append("Content shows signs of potential AI generation or fabrication")
+            insights.append(f"Detected {flags} potential content reliability indicators to review")
 
         # Overall score insight
         final_score = score_data["final_score"]

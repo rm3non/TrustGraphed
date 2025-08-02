@@ -178,18 +178,21 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
     contradiction_penalty = min(signals.get("contradictions", 0) * 10, 30)
     base_score -= contradiction_penalty
 
-    # ---------- Transparency-Aware AI Handling ----------
-    # Adjust AI penalty based on content declaration honesty
+    # ---------- Transparency Verification (AI Declaration Alignment) ----------
+    # Check if AI declaration matches detected AI characteristics
     ai_likelihood = signals.get("ai_likelihood", 0)
     
-    if assertion_type.lower() in ["ai", "mixed"]:
-        # If user honestly declares AI/mixed content, reduce AI penalty significantly
-        ai_penalty = int(ai_likelihood * 8)  # Reduced penalty for honest declaration
-    else:
-        # Standard penalty for undeclared or claimed original content
-        ai_penalty = int(ai_likelihood * 20)
+    # No penalty for AI usage itself - only for transparency misalignment
+    transparency_alignment_penalty = 0
     
-    base_score -= ai_penalty
+    if assertion_type.lower() == "original" and ai_likelihood > 0.6:
+        # High AI likelihood but claimed as original = transparency issue
+        transparency_alignment_penalty = int(ai_likelihood * 15)
+    elif assertion_type.lower() in ["ai", "mixed"] and ai_likelihood < 0.3:
+        # Claimed AI but low AI likelihood = possible over-disclosure (minor penalty)
+        transparency_alignment_penalty = 3
+    
+    base_score -= transparency_alignment_penalty
 
     # ---------- Trapdoor Logic (Zero-Fabrication) ----------
     if signals.get("citations", 0) == 0 and not signals.get("author_detected", False):
@@ -200,13 +203,13 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
             base_score = min(base_score, 25)  # Standard floor
 
     # ---------- Transparency Rewards (Honesty Bonus) ----------
-    # Reward honest content declaration - transparency increases trust
+    # Reward transparent content declaration - honesty builds trust
     transparency_multipliers = {
-        "original": 1.0,     # Standard score for claimed original content
-        "ai": 1.20,          # 20% BONUS for honestly declaring AI content
-        "copied": 1.15,      # 15% BONUS for honestly declaring copied content  
-        "mixed": 1.18,       # 18% BONUS for honestly declaring mixed sources
-        "unsure": 0.80       # 20% penalty for refusing to declare
+        "original": 1.0,     # Standard evaluation for claimed original content
+        "ai": 1.10,          # 10% BONUS for transparent AI declaration
+        "copied": 1.10,      # 10% BONUS for transparent copied content declaration  
+        "mixed": 1.15,       # 15% BONUS for transparent mixed sources declaration
+        "unsure": 0.90       # 10% reduction for undeclared content type
     }
     
     transparency_multiplier = transparency_multipliers.get(assertion_type.lower(), 0.80)
