@@ -1053,7 +1053,7 @@ async function handleFileUpload() {
         console.log("Evaluation results:", result);
 
         if (result.status === 'success') {
-            displayResults(result.trust_evaluation);
+            displayResults(result);
             showMessage('Analysis complete!', 'success');
         } else {
             throw new Error(result.message || 'Evaluation failed');
@@ -1067,19 +1067,19 @@ async function handleFileUpload() {
     }
 }
 
-function displayResults(response) {
+function displayResults(data) {
     // Hide loading indicator
     showLoading(false);
 
     // Display trust score
-    document.getElementById('trustScoreValue').innerText = (response.trust_score * 100).toFixed(2) + '%';
-    document.getElementById('trustScoreLabel').innerText = response.trust_level;
+    document.getElementById('trustScoreValue').innerText = (data.trust_evaluation.trust_score * 100).toFixed(2) + '%';
+    document.getElementById('trustScoreLabel').innerText = data.trust_evaluation.trust_level;
 
     // Display component scores
-    document.getElementById('sourceDataGrapplerScore').innerText = (response.module_scores.source_data_grappler * 100).toFixed(2) + '%';
-    document.getElementById('assertionIntegrityScore').innerText = (response.module_scores.assertion_integrity * 100).toFixed(2) + '%';
-    document.getElementById('confidenceComputationScore').innerText = (response.module_scores.confidence_computation * 100).toFixed(2) + '%';
-    document.getElementById('zeroFabricationScore').innerText = (response.module_scores.zero_fabrication * 100).toFixed(2) + '%';
+    document.getElementById('sourceDataGrapplerScore').innerText = (data.module_results.source_data_grappler.extraction_confidence * 100).toFixed(2) + '%';
+    document.getElementById('assertionIntegrityScore').innerText = (data.module_results.assertion_integrity.integrity_score * 100).toFixed(2) + '%';
+    document.getElementById('confidenceComputationScore').innerText = (data.module_results.confidence_computation.overall_confidence * 100).toFixed(2) + '%';
+    document.getElementById('zeroFabricationScore').innerText = (data.module_results.zero_fabrication.authenticity_score * 100).toFixed(2) + '%';
 
     // Show results
     document.getElementById('resultsContainer').classList.remove('hidden');
@@ -1088,24 +1088,40 @@ function displayResults(response) {
     document.getElementById('insights').classList.remove('hidden');
     document.getElementById('componentScores').classList.remove('hidden');
 
-    // Display disclaimer
-    const disclaimerContainer = document.getElementById('disclaimer');
-    if (disclaimerContainer && response.disclaimer) {
-        disclaimerContainer.innerHTML = `
-            <div class="disclaimer-box">
-                <h4>📋 Score Explanation</h4>
-                <p class="disclaimer-text">${response.disclaimer}</p>
-            </div>
+    // Display disclaimer with score explanation
+        const disclaimerContainer = document.getElementById('disclaimer');
+        if (disclaimerContainer && data.trust_evaluation.disclaimer) {
+            disclaimerContainer.innerHTML = `
+                <div class="disclaimer-box">
+                    <h4>📋 Score Explanation</h4>
+                    <p class="disclaimer-text">${data.trust_evaluation.disclaimer}</p>
+                </div>
+            `;
+        }
+
+        // Show input method used
+        const inputMethodDisplay = document.createElement('div');
+        inputMethodDisplay.className = 'input-method-display';
+        inputMethodDisplay.style.cssText = 'margin-top: 1rem; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 6px; font-size: 0.875rem; color: var(--text-secondary);';
+
+        const inputType = this.currentInputMethod === 'file' ? 'uploaded file' : 'typed content';
+        inputMethodDisplay.innerHTML = `
+            <i class="fas fa-${this.currentInputMethod === 'file' ? 'file' : 'keyboard'}"></i>
+            Evaluated from: <strong style="color: var(--text-primary);">${inputType}</strong>
         `;
-    }
+
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection && !document.querySelector('.input-method-display')) {
+            resultsSection.appendChild(inputMethodDisplay);
+        }
 
     // Display insights
     const insightsContainer = document.getElementById('insights');
-    if (insightsContainer && response.insights) {
+    if (insightsContainer && data.trust_evaluation.insights) {
         insightsContainer.innerHTML = `
             <h4>🔍 Analysis Insights</h4>
             <ul>
-                ${response.insights.map(insight => `<li>${insight}</li>`).join('')}
+                ${data.trust_evaluation.insights.map(insight => `<li>${insight}</li>`).join('')}
             </ul>
         `;
     }
