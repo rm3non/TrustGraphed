@@ -266,6 +266,8 @@ class TrustGraphedApp {
                 }
 
                 console.log('Sending file for evaluation:', this.currentFile.name);
+                console.log('File size:', this.currentFile.size, 'bytes');
+                console.log('File type:', this.currentFile.type);
 
                 const formData = new FormData();
                 formData.append('file', this.currentFile);
@@ -279,8 +281,15 @@ class TrustGraphedApp {
             console.log('Response status:', response.status);
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                let errorMessage;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                } catch (parseError) {
+                    // If we can't parse the response as JSON, use the status text
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -290,7 +299,16 @@ class TrustGraphedApp {
 
         } catch (error) {
             console.error('Evaluation failed:', error);
-            const errorMessage = error.message || error.toString() || 'Unknown error occurred';
+            let errorMessage = 'Unknown error occurred';
+            
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error && typeof error === 'object') {
+                errorMessage = error.message || error.error || JSON.stringify(error);
+            }
+            
             this.showError(`Evaluation failed: ${errorMessage}`);
         } finally {
             this.setLoading(false);
