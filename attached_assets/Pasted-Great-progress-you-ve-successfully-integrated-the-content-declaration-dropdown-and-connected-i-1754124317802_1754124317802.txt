@@ -1,0 +1,125 @@
+Great progress — you've successfully integrated the **content declaration dropdown** and connected it to the backend. That’s a huge protocol integrity milestone ✅
+
+However, if **all content types now result in a low score** (regardless of user declaration), that points to an **overcorrection in the scoring logic** — possibly in your `cce.py` or `score_engine.py` penalty application.
+
+Let’s analyze and fix it:
+
+---
+
+## ⚠️ SYMPTOM:
+
+> All assertion types (Original, AI-generated, Copied, Mixed, Unsure) return **very low TrustScores**, even for clean content.
+
+---
+
+## 🎯 LIKELY ROOT CAUSES
+
+### 1. **Global penalty is being applied regardless of declaration**
+
+Check in `cce.py` or `score_engine.py` if something like this exists:
+
+```python
+if assertion_type != "original":
+    score *= 0.5
+```
+
+If this logic doesn't differentiate between “copied” vs. “mixed” vs. “AI,” it applies a **flat penalty** — which is too harsh and defeats the purpose of nuanced intent scoring.
+
+---
+
+### 2. **Penalty stack is multiplicative instead of weighted**
+
+Let’s say:
+
+```python
+score *= 0.75  # AI
+score *= 0.7   # No citations
+score *= 0.85  # Low contradiction
+```
+
+This will result in:
+`final_score = base_score * 0.75 * 0.7 * 0.85 = ~0.45x base`
+
+→ Even good content will tank below 50.
+
+---
+
+### 3. **Assertion type overrides are missing soft boosts**
+
+If someone selects **“Partially AI-generated”** and provides evidence, we should reward them for honesty by:
+
+* Applying a **smaller penalty**
+* Or allowing override if citation or attribution is present
+
+---
+
+## ✅ HOW TO FIX IT
+
+### 🔧 In `cce.py` – Adjust Penalty Logic:
+
+```python
+def apply_assertion_penalty(score, assertion_type):
+    if assertion_type == "original":
+        return score  # no penalty
+    elif assertion_type == "ai":
+        return score * 0.85  # mild penalty
+    elif assertion_type == "copied":
+        return score * 0.75
+    elif assertion_type == "mixed":
+        return score * 0.8
+    elif assertion_type == "unsure":
+        return score * 0.6  # harshest
+    else:
+        return score * 0.7  # fallback
+```
+
+→ Then call this before returning your confidence score:
+
+```python
+final_score = apply_assertion_penalty(base_score, assertion_type)
+```
+
+---
+
+### ✅ Add Positive Weights (Optional, but Ideal)
+
+If citations are found, or metadata is valid:
+
+```python
+if signals["citations"] > 2:
+    final_score += 5  # small boost
+
+if "author" in signals:
+    final_score += 5
+```
+
+→ Cap score at 100 to avoid overflow.
+
+---
+
+## 🔁 Also Fix in UI (Optional)
+
+On the frontend:
+
+* Show adjusted score with badge:
+  *"User declared this content as ‘Partially AI-generated’. Score adjusted accordingly."*
+
+---
+
+## 📌 Final Recommendation
+
+| Fix Type                    | Priority    | Impact                                     |
+| --------------------------- | ----------- | ------------------------------------------ |
+| Adjust penalties per intent | ✅ Critical  | Restores logic fairness                    |
+| Normalize scoring tiers     | ✅ High      | Prevents score suppression                 |
+| Cap + floor logic           | 🟡 Medium   | Stops negative scores or runaway inflation |
+| Add positive signal boosts  | 🟢 Optional | Encourages honesty and good formatting     |
+
+---
+
+Would you like me to give you:
+
+* The **exact code diff for `cce.py` and `score_engine.py`** to fix this?
+* A JSON-based **scoring logic map** you can use to tweak live?
+
+You're very close to protocol-grade behavior — this is the final tuning pass.
