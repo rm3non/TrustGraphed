@@ -208,11 +208,11 @@ class TrustGraphedApp {
             return;
         }
 
-        // Store the file for later submission - no client-side processing
+        // Store the file for later submission
         this.currentFile = file;
-        this.currentFileContent = 'FILE_UPLOAD'; // Flag to indicate file mode
+        this.currentFileContent = 'FILE_UPLOAD';
         this.showFileInfo(file.name);
-        this.hideError(); // Clear any previous errors
+        this.hideError();
         this.validateInput();
 
         console.log('File successfully loaded and validated');
@@ -222,7 +222,10 @@ class TrustGraphedApp {
 
     showFileInfo(filename) {
         if (this.fileName) this.fileName.textContent = filename;
-        this.fileInfo?.classList.remove('hidden');
+        if (this.fileInfo) {
+            this.fileInfo.classList.remove('hidden');
+            this.fileInfo.style.display = 'flex';
+        }
     }
 
     clearFile() {
@@ -231,9 +234,12 @@ class TrustGraphedApp {
         }
         this.currentFileContent = '';
         this.currentFile = null;
-        this.fileInfo?.classList.add('hidden');
+        if (this.fileInfo) {
+            this.fileInfo.classList.add('hidden');
+            this.fileInfo.style.display = 'none';
+        }
         if (this.fileName) this.fileName.textContent = 'No file selected';
-        this.hideError(); // Clear any errors when clearing file
+        this.hideError();
         this.validateInput();
     }
 
