@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,45 +16,48 @@
         <main>
             <section class="input-section">
                 <h2>Evaluate Content</h2>
-                <div class="input-tabs">
-                    <button type="button" id="textTab" class="tab-btn active">Text Input</button>
-                    <button type="button" id="fileTab" class="tab-btn">File Upload</button>
-                </div>
-                
-                <form id="evaluationForm" enctype="multipart/form-data">
-                    <div id="textInputSection" class="input-method active">
-                        <textarea 
-                            id="contentInput" 
-                            placeholder="Paste your content here for trust evaluation... (minimum 10 characters)"
-                            rows="8"
-                        ></textarea>
+
+                <div class="input-methods">
+                    <div class="method-tabs">
+                        <button type="button" id="textTab" class="tab-btn active">📝 Text Input</button>
+                        <button type="button" id="fileTab" class="tab-btn">📁 File Upload</button>
                     </div>
-                    
-                    <div id="fileInputSection" class="input-method hidden">
-                        <div class="file-upload-area">
-                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx,.doc,.md" hidden>
-                            <div id="fileDropZone" class="file-drop-zone">
-                                <div class="upload-icon">📄</div>
-                                <p>Click to upload or drag & drop</p>
-                                <small>Supports: TXT, PDF, DOCX, DOC, MD</small>
+
+                    <form id="evaluationForm" enctype="multipart/form-data">
+                        <div id="textInputSection" class="input-method active">
+                            <textarea 
+                                id="contentInput" 
+                                placeholder="Paste your content here for trust evaluation... (minimum 10 characters)"
+                                rows="8"
+                            ></textarea>
+                        </div>
+
+                        <div id="fileInputSection" class="input-method hidden">
+                            <div class="file-upload-area">
+                                <input type="file" id="fileInput" accept=".txt,.pdf,.docx" />
+                                <div class="file-upload-hint">
+                                    <p>📎 Choose a file (.txt, .pdf, .docx)</p>
+                                    <p class="file-size-hint">Maximum size: 10MB</p>
+                                </div>
                             </div>
-                            <div id="fileInfo" class="file-info hidden">
-                                <span id="fileName"></span>
-                                <button type="button" id="removeFile">✕</button>
+                            <div id="filePreview" class="file-preview hidden">
+                                <h4>📄 File Content Preview:</h4>
+                                <div id="previewText" class="preview-content"></div>
+                                <button type="button" id="clearFile" class="clear-btn">✕ Clear File</button>
                             </div>
                         </div>
-                    </div>
-                    
-                    <button type="submit" id="analyzeBtn">
-                        <span id="btnText">Analyze Content</span>
-                        <span id="loadingSpinner" class="spinner hidden">⟳</span>
-                    </button>
-                </form>
+
+                        <button type="submit" id="analyzeBtn" disabled>
+                            <span id="btnText">Analyze Content</span>
+                            <span id="loadingSpinner" class="spinner hidden">⟳</span>
+                        </button>
+                    </form>
+                </div>
             </section>
 
             <section id="resultsSection" class="results-section hidden">
                 <h2>Trust Evaluation Results</h2>
-                
+
                 <div class="trust-score-card">
                     <div class="score-circle">
                         <span id="trustScore">-</span>

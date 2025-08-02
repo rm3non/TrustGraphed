@@ -3,112 +3,276 @@ class TrustGraphedApp {
     constructor() {
         this.form = document.getElementById('evaluationForm');
         this.contentInput = document.getElementById('contentInput');
+        this.fileInput = document.getElementById('fileInput');
         this.analyzeBtn = document.getElementById('analyzeBtn');
         this.btnText = document.getElementById('btnText');
         this.loadingSpinner = document.getElementById('loadingSpinner');
         this.resultsSection = document.getElementById('resultsSection');
         this.errorSection = document.getElementById('errorSection');
         
+        // File upload elements
+        this.textTab = document.getElementById('textTab');
+        this.fileTab = document.getElementById('fileTab');
+        this.textInputSection = document.getElementById('textInputSection');
+        this.fileInputSection = document.getElementById('fileInputSection');
+        this.filePreview = document.getElementById('filePreview');
+        this.previewText = document.getElementById('previewText');
+        this.clearFileBtn = document.getElementById('clearFile');
+        
+        this.currentInputMethod = 'text';
+        this.currentFileContent = '';
+        
         this.init();
     }
 
     init() {
         this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        this.contentInput.addEventListener('input', () => this.validateInput());
+        this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+        this.clearFileBtn.addEventListener('click', () => this.clearFile());
         
         // Tab switching
-        document.getElementById('textTab').addEventListener('click', () => this.switchTab('text'));
-        document.getElementById('fileTab').addEventListener('click', () => this.switchTab('file'));
+        this.textTab.addEventListener('click', () => this.switchTab('text'));
+        this.fileTab.addEventListener('click', () => this.switchTab('file'));
         
-        // File upload handling
-        this.setupFileUpload();
+        // Drag and drop
+        this.setupDragAndDrop();
         
         // Test backend connection on load
         this.testConnection();
+        
+        // Initial validation
+        this.validateInput();
     }
 
-    switchTab(type) {
-        const textTab = document.getElementById('textTab');
-        const fileTab = document.getElementById('fileTab');
-        const textSection = document.getElementById('textInputSection');
-        const fileSection = document.getElementById('fileInputSection');
+    setupDragAndDrop() {
+        const uploadArea = document.querySelector('.file-upload-area');
         
-        if (type === 'text') {
-            textTab.classList.add('active');
-            fileTab.classList.remove('active');
-            textSection.classList.add('active');
-            textSection.classList.remove('hidden');
-            fileSection.classList.remove('active');
-            fileSection.classList.add('hidden');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, this.preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+
+        uploadArea.addEventListener('drop', (e) => this.handleDrop(e), false);
+        uploadArea.addEventListener('click', () => this.fileInput.click());
+    }
+
+    preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    handleDrop(e) {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            this.fileInput.files = files;
+            this.handleFileUpload({ target: { files } });
+        }
+    }
+
+    switchTab(method) {
+        this.currentInputMethod = method;
+        
+        // Update tab styles
+        this.textTab.classList.toggle('active', method === 'text');
+        this.fileTab.classList.toggle('active', method === 'file');
+        
+        // Show/hide input sections
+        this.textInputSection.classList.toggle('active', method === 'text');
+        this.textInputSection.classList.toggle('hidden', method !== 'text');
+        this.fileInputSection.classList.toggle('hidden', method !== 'file');
+        
+        // Clear other method when switching
+        if (method === 'text') {
+            this.clearFile();
         } else {
-            fileTab.classList.add('active');
-            textTab.classList.remove('active');
-            fileSection.classList.add('active');
-            fileSection.classList.remove('hidden');
-            textSection.classList.remove('active');
-            textSection.classList.add('hidden');
+            this.contentInput.value = '';
         }
-    }
-
-    setupFileUpload() {
-        const fileInput = document.getElementById('fileInput');
-        const dropZone = document.getElementById('fileDropZone');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const removeFile = document.getElementById('removeFile');
-
-        // Click to upload
-        dropZone.addEventListener('click', () => fileInput.click());
-
-        // File selection
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                this.handleFileSelect(e.target.files[0]);
-            }
-        });
-
-        // Drag and drop
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            
-            if (e.dataTransfer.files.length > 0) {
-                this.handleFileSelect(e.dataTransfer.files[0]);
-            }
-        });
-
-        // Remove file
-        removeFile.addEventListener('click', () => {
-            fileInput.value = '';
-            fileInfo.classList.add('hidden');
-            dropZone.style.display = 'block';
-        });
-    }
-
-    handleFileSelect(file) {
-        const allowedTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'text/markdown'];
         
-        if (!allowedTypes.includes(file.type) && !file.name.endsWith('.md')) {
-            this.showError('Please select a valid file type (TXT, PDF, DOCX, DOC, MD)');
+        this.validateInput();
+    }
+
+    async handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            this.clearFile();
             return;
         }
 
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
-            this.showError('File size must be less than 10MB');
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+            this.showError('File size exceeds 10MB limit. Please choose a smaller file.');
+            this.clearFile();
             return;
         }
 
-        document.getElementById('fileName').textContent = file.name;
-        document.getElementById('fileInfo').classList.remove('hidden');
-        document.getElementById('fileDropZone').style.display = 'none';
+        // Validate file type
+        const allowedTypes = ['.txt', '.pdf', '.docx'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            this.showError('Unsupported file type. Please upload .txt, .pdf, or .docx files only.');
+            this.clearFile();
+            return;
+        }
+
+        try {
+            this.setLoading(true);
+            this.hideError();
+            
+            let extractedText = '';
+            
+            switch (fileExtension) {
+                case '.txt':
+                    extractedText = await this.readTextFile(file);
+                    break;
+                case '.pdf':
+                    extractedText = await this.readPdfFile(file);
+                    break;
+                case '.docx':
+                    extractedText = await this.readDocxFile(file);
+                    break;
+            }
+            
+            if (!extractedText || extractedText.trim().length < 10) {
+                throw new Error('Unable to extract sufficient text from file. Please check the file content.');
+            }
+            
+            this.currentFileContent = extractedText;
+            this.showFilePreview(file.name, extractedText);
+            this.validateInput();
+            
+        } catch (error) {
+            console.error('File processing error:', error);
+            this.showError(`Failed to process file: ${error.message}`);
+            this.clearFile();
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    async readTextFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('Failed to read text file'));
+            reader.readAsText(file);
+        });
+    }
+
+    async readPdfFile(file) {
+        // For PDF parsing, we'll use a simple approach with FileReader
+        // In a production app, you'd want to include pdf.js library
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    // This is a simplified PDF text extraction
+                    // For production, integrate pdf.js or similar library
+                    const arrayBuffer = e.target.result;
+                    const text = await this.extractPdfText(arrayBuffer);
+                    resolve(text);
+                } catch (error) {
+                    reject(new Error('Failed to parse PDF file. Please ensure it contains readable text.'));
+                }
+            };
+            reader.onerror = () => reject(new Error('Failed to read PDF file'));
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async extractPdfText(arrayBuffer) {
+        // Simplified PDF text extraction - replace with pdf.js in production
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const text = String.fromCharCode.apply(null, uint8Array);
+        
+        // Basic text extraction from PDF (very simplified)
+        const textMatches = text.match(/\(([^)]+)\)/g);
+        if (textMatches && textMatches.length > 0) {
+            return textMatches.map(match => match.slice(1, -1)).join(' ').substring(0, 5000);
+        }
+        
+        // Fallback: look for readable text patterns
+        const readableText = text.replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (readableText.length > 50) {
+            return readableText.substring(0, 5000);
+        }
+        
+        throw new Error('No readable text found in PDF');
+    }
+
+    async readDocxFile(file) {
+        // For DOCX parsing, we'll implement a basic approach
+        // In production, you'd want to include mammoth.js or similar
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const text = await this.extractDocxText(arrayBuffer);
+                    resolve(text);
+                } catch (error) {
+                    reject(new Error('Failed to parse DOCX file. Please save as .txt or try a different file.'));
+                }
+            };
+            reader.onerror = () => reject(new Error('Failed to read DOCX file'));
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async extractDocxText(arrayBuffer) {
+        // Simplified DOCX text extraction - replace with mammoth.js in production
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const text = String.fromCharCode.apply(null, uint8Array);
+        
+        // Look for text content patterns in DOCX XML
+        const xmlMatches = text.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
+        if (xmlMatches && xmlMatches.length > 0) {
+            const extractedText = xmlMatches
+                .map(match => match.replace(/<[^>]+>/g, ''))
+                .join(' ')
+                .trim();
+            
+            if (extractedText.length > 10) {
+                return extractedText.substring(0, 5000);
+            }
+        }
+        
+        throw new Error('No readable text found in DOCX file');
+    }
+
+    showFilePreview(filename, content) {
+        const preview = content.substring(0, 300) + (content.length > 300 ? '...' : '');
+        this.previewText.textContent = `📁 ${filename}\n\n${preview}`;
+        this.filePreview.classList.remove('hidden');
+    }
+
+    clearFile() {
+        this.fileInput.value = '';
+        this.currentFileContent = '';
+        this.filePreview.classList.add('hidden');
+        this.previewText.textContent = '';
+        this.validateInput();
+    }
+
+    validateInput() {
+        let hasValidInput = false;
+        
+        if (this.currentInputMethod === 'text') {
+            const textContent = this.contentInput.value.trim();
+            hasValidInput = textContent.length >= 10;
+        } else {
+            hasValidInput = this.currentFileContent.length >= 10;
+        }
+        
+        this.analyzeBtn.disabled = !hasValidInput;
     }
 
     async testConnection() {
@@ -125,32 +289,16 @@ class TrustGraphedApp {
     async handleSubmit(e) {
         e.preventDefault();
         
-        const fileInput = document.getElementById('fileInput');
-        const isFileMode = document.getElementById('fileTab').classList.contains('active');
-        
         let content = '';
-        let requestData;
-
-        if (isFileMode && fileInput.files.length > 0) {
-            // File upload mode
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            requestData = formData;
-            
-            console.log('Sending file for evaluation:', fileInput.files[0].name);
-        } else if (!isFileMode) {
-            // Text input mode
+        
+        if (this.currentInputMethod === 'text') {
             content = this.contentInput.value.trim();
-            
-            if (!content || content.length < 10) {
-                this.showError('Please enter at least 10 characters of content to analyze.');
-                return;
-            }
-            
-            requestData = JSON.stringify({ content: content });
-            console.log('Sending content for evaluation:', content.substring(0, 100) + '...');
         } else {
-            this.showError('Please provide content to analyze - either enter text or upload a file.');
+            content = this.currentFileContent;
+        }
+        
+        if (!content || content.length < 10) {
+            this.showError('Please provide at least 10 characters of content to analyze.');
             return;
         }
 
@@ -159,19 +307,15 @@ class TrustGraphedApp {
         this.hideResults();
 
         try {
-            const fetchOptions = {
-                method: 'POST',
-                body: requestData
-            };
-
-            // Only set Content-Type for JSON, let browser set it for FormData
-            if (!isFileMode || fileInput.files.length === 0) {
-                fetchOptions.headers = {
-                    'Content-Type': 'application/json',
-                };
-            }
+            console.log('Sending content for evaluation:', content.substring(0, 100) + '...');
             
-            const response = await fetch('/evaluate', fetchOptions);
+            const response = await fetch('/evaluate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: content })
+            });
 
             console.log('Response status:', response.status);
 
@@ -249,9 +393,9 @@ class TrustGraphedApp {
             this.btnText.classList.add('hidden');
             this.loadingSpinner.classList.remove('hidden');
         } else {
-            this.analyzeBtn.disabled = false;
-            this.btnText.classList.remove('hidden');
             this.loadingSpinner.classList.add('hidden');
+            this.btnText.classList.remove('hidden');
+            this.validateInput(); // Re-validate to set correct disabled state
         }
     }
 

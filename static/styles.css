@@ -171,8 +171,131 @@ main {
     gap: 10px;
 }
 
-#analyzeBtn:hover {
+#analyzeBtn:hover:not(:disabled) {
     transform: translateY(-2px);
+}
+
+#analyzeBtn:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.input-methods {
+    margin-bottom: 20px;
+}
+
+.method-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #718096;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+.tab-btn:hover {
+    color: #667eea;
+}
+
+.input-method {
+    transition: opacity 0.3s ease;
+}
+
+.input-method.hidden {
+    display: none;
+}
+
+.file-upload-area {
+    border: 2px dashed #e2e8f0;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+    cursor: pointer;
+}
+
+.file-upload-area:hover {
+    border-color: #667eea;
+}
+
+.file-upload-area.dragover {
+    border-color: #667eea;
+    background-color: #f7fafc;
+}
+
+#fileInput {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+.file-upload-hint p {
+    margin: 5px 0;
+    color: #4a5568;
+}
+
+.file-size-hint {
+    font-size: 12px;
+    color: #718096;
+}
+
+.file-preview {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f7fafc;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.file-preview h4 {
+    margin-bottom: 10px;
+    color: #4a5568;
+}
+
+.preview-content {
+    background: white;
+    padding: 15px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    max-height: 200px;
+    overflow-y: auto;
+    color: #2d3748;
+    border: 1px solid #e2e8f0;
+}
+
+.clear-btn {
+    background: #e53e3e;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.clear-btn:hover {
+    background: #c53030;
 }
 
 #analyzeBtn:disabled {
