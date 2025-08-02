@@ -118,10 +118,10 @@ class TrustScoreEngine:
         # Assertion type insight
         assertion_insights = {
             "original": "Content declared as fully original - standard trust evaluation applied",
-            "ai": "🔍 TRANSPARENCY BONUS: Honest AI declaration increases trust score (+15%)",
-            "copied": "🔍 TRANSPARENCY BONUS: Honest copied content declaration increases trust (+10%)",
-            "mixed": "🔍 TRANSPARENCY BONUS: Honest mixed sources declaration increases trust (+12%)",
-            "unsure": "⚠️ Content source undeclared - transparency would improve trust score"
+            "ai": "🔍 TRANSPARENCY BONUS: Honest AI declaration increases trust (+20%) and reduces AI penalties",
+            "copied": "🔍 TRANSPARENCY BONUS: Honest copied content declaration increases trust (+15%)",
+            "mixed": "🔍 TRANSPARENCY BONUS: Honest mixed sources declaration increases trust (+18%) and reduces AI penalties",
+            "unsure": "⚠️ Content source undeclared - transparency would improve trust score significantly"
         }
         insights.append(assertion_insights.get(assertion_type, "Unknown content declaration"))
 

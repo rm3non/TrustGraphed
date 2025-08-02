@@ -178,26 +178,38 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
     contradiction_penalty = min(signals.get("contradictions", 0) * 10, 30)
     base_score -= contradiction_penalty
 
-    # --- AI Likelihood Penalty (Max -20) ---
-    ai_penalty = int(signals.get("ai_likelihood", 0) * 20)
+    # ---------- Transparency-Aware AI Handling ----------
+    # Adjust AI penalty based on content declaration honesty
+    ai_likelihood = signals.get("ai_likelihood", 0)
+    
+    if assertion_type.lower() in ["ai", "mixed"]:
+        # If user honestly declares AI/mixed content, reduce AI penalty significantly
+        ai_penalty = int(ai_likelihood * 8)  # Reduced penalty for honest declaration
+    else:
+        # Standard penalty for undeclared or claimed original content
+        ai_penalty = int(ai_likelihood * 20)
+    
     base_score -= ai_penalty
 
     # ---------- Trapdoor Logic (Zero-Fabrication) ----------
     if signals.get("citations", 0) == 0 and not signals.get("author_detected", False):
-        # No provenance = score floor
-        base_score = min(base_score, 25)
+        # No provenance = score floor, but less harsh for declared AI content
+        if assertion_type.lower() in ["ai", "mixed"]:
+            base_score = min(base_score, 40)  # Higher floor for honest AI declaration
+        else:
+            base_score = min(base_score, 25)  # Standard floor
 
     # ---------- Transparency Rewards (Honesty Bonus) ----------
     # Reward honest content declaration - transparency increases trust
     transparency_multipliers = {
         "original": 1.0,     # Standard score for claimed original content
-        "ai": 1.15,          # 15% BONUS for honestly declaring AI content
-        "copied": 1.10,      # 10% BONUS for honestly declaring copied content  
-        "mixed": 1.12,       # 12% BONUS for honestly declaring mixed sources
-        "unsure": 0.85       # 15% penalty only for refusing to declare
+        "ai": 1.20,          # 20% BONUS for honestly declaring AI content
+        "copied": 1.15,      # 15% BONUS for honestly declaring copied content  
+        "mixed": 1.18,       # 18% BONUS for honestly declaring mixed sources
+        "unsure": 0.80       # 20% penalty for refusing to declare
     }
     
-    transparency_multiplier = transparency_multipliers.get(assertion_type.lower(), 0.85)
+    transparency_multiplier = transparency_multipliers.get(assertion_type.lower(), 0.80)
     final_score = max(0, min(100, base_score * transparency_multiplier))
 
     # ---------- Score Banding ----------
