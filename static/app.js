@@ -1,6 +1,7 @@
 
 class TrustGraphedApp {
     constructor() {
+        this.modal = document.getElementById('evaluationModal');
         this.form = document.getElementById('evaluationForm');
         this.contentInput = document.getElementById('contentInput');
         this.fileInput = document.getElementById('fileInput');
@@ -10,14 +11,21 @@ class TrustGraphedApp {
         this.resultsSection = document.getElementById('resultsSection');
         this.errorSection = document.getElementById('errorSection');
         
+        // Modal controls
+        this.startEvaluationBtn = document.getElementById('startEvaluationBtn');
+        this.heroStartBtn = document.getElementById('heroStartBtn');
+        this.uploadPasteBtn = document.getElementById('uploadPasteBtn');
+        this.ctaStartBtn = document.getElementById('ctaStartBtn');
+        this.closeModal = document.getElementById('closeModal');
+        
         // File upload elements
         this.textTab = document.getElementById('textTab');
         this.fileTab = document.getElementById('fileTab');
         this.textInputSection = document.getElementById('textInputSection');
         this.fileInputSection = document.getElementById('fileInputSection');
-        this.filePreview = document.getElementById('filePreview');
-        this.previewText = document.getElementById('previewText');
-        this.clearFileBtn = document.getElementById('clearFile');
+        this.fileInfo = document.getElementById('fileInfo');
+        this.fileName = document.getElementById('fileName');
+        this.removeFileBtn = document.getElementById('removeFile');
         
         this.currentInputMethod = 'text';
         this.currentFileContent = '';
@@ -26,14 +34,27 @@ class TrustGraphedApp {
     }
 
     init() {
-        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-        this.contentInput.addEventListener('input', () => this.validateInput());
-        this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-        this.clearFileBtn.addEventListener('click', () => this.clearFile());
+        // Modal triggers
+        this.startEvaluationBtn?.addEventListener('click', () => this.openModal());
+        this.heroStartBtn?.addEventListener('click', () => this.openModal());
+        this.uploadPasteBtn?.addEventListener('click', () => this.openModal('file'));
+        this.ctaStartBtn?.addEventListener('click', () => this.openModal());
+        this.closeModal?.addEventListener('click', () => this.closeModalHandler());
+        
+        // Modal overlay click to close
+        this.modal?.addEventListener('click', (e) => {
+            if (e.target === this.modal) this.closeModalHandler();
+        });
+        
+        // Form handling
+        this.form?.addEventListener('submit', (e) => this.handleSubmit(e));
+        this.contentInput?.addEventListener('input', () => this.validateInput());
+        this.fileInput?.addEventListener('change', (e) => this.handleFileUpload(e));
+        this.removeFileBtn?.addEventListener('click', () => this.clearFile());
         
         // Tab switching
-        this.textTab.addEventListener('click', () => this.switchTab('text'));
-        this.fileTab.addEventListener('click', () => this.switchTab('file'));
+        this.textTab?.addEventListener('click', () => this.switchTab('text'));
+        this.fileTab?.addEventListener('click', () => this.switchTab('file'));
         
         // Drag and drop
         this.setupDragAndDrop();
@@ -45,23 +66,49 @@ class TrustGraphedApp {
         this.validateInput();
     }
 
+    openModal(defaultTab = 'text') {
+        this.modal?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        if (defaultTab === 'file') {
+            this.switchTab('file');
+        } else {
+            this.switchTab('text');
+        }
+        
+        // Focus appropriate input
+        setTimeout(() => {
+            if (defaultTab === 'text') {
+                this.contentInput?.focus();
+            }
+        }, 100);
+    }
+
+    closeModalHandler() {
+        this.modal?.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        this.hideResults();
+        this.hideError();
+    }
+
     setupDragAndDrop() {
-        const uploadArea = document.querySelector('.file-upload-area');
+        const dropZone = document.querySelector('.file-drop-zone');
+        if (!dropZone) return;
         
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, this.preventDefaults, false);
+            dropZone.addEventListener(eventName, this.preventDefaults, false);
         });
 
         ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
         });
 
         ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
         });
 
-        uploadArea.addEventListener('drop', (e) => this.handleDrop(e), false);
-        uploadArea.addEventListener('click', () => this.fileInput.click());
+        dropZone.addEventListener('drop', (e) => this.handleDrop(e), false);
+        dropZone.addEventListener('click', () => this.fileInput?.click());
     }
 
     preventDefaults(e) {
@@ -81,19 +128,19 @@ class TrustGraphedApp {
         this.currentInputMethod = method;
         
         // Update tab styles
-        this.textTab.classList.toggle('active', method === 'text');
-        this.fileTab.classList.toggle('active', method === 'file');
+        this.textTab?.classList.toggle('active', method === 'text');
+        this.fileTab?.classList.toggle('active', method === 'file');
         
         // Show/hide input sections
-        this.textInputSection.classList.toggle('active', method === 'text');
-        this.textInputSection.classList.toggle('hidden', method !== 'text');
-        this.fileInputSection.classList.toggle('hidden', method !== 'file');
+        this.textInputSection?.classList.toggle('active', method === 'text');
+        this.textInputSection?.classList.toggle('hidden', method !== 'text');
+        this.fileInputSection?.classList.toggle('hidden', method !== 'file');
         
         // Clear other method when switching
         if (method === 'text') {
             this.clearFile();
         } else {
-            this.contentInput.value = '';
+            if (this.contentInput) this.contentInput.value = '';
         }
         
         this.validateInput();
@@ -146,7 +193,7 @@ class TrustGraphedApp {
             }
             
             this.currentFileContent = extractedText;
-            this.showFilePreview(file.name, extractedText);
+            this.showFileInfo(file.name);
             this.validateInput();
             
         } catch (error) {
@@ -168,14 +215,10 @@ class TrustGraphedApp {
     }
 
     async readPdfFile(file) {
-        // For PDF parsing, we'll use a simple approach with FileReader
-        // In a production app, you'd want to include pdf.js library
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    // This is a simplified PDF text extraction
-                    // For production, integrate pdf.js or similar library
                     const arrayBuffer = e.target.result;
                     const text = await this.extractPdfText(arrayBuffer);
                     resolve(text);
@@ -189,17 +232,14 @@ class TrustGraphedApp {
     }
 
     async extractPdfText(arrayBuffer) {
-        // Simplified PDF text extraction - replace with pdf.js in production
         const uint8Array = new Uint8Array(arrayBuffer);
         const text = String.fromCharCode.apply(null, uint8Array);
         
-        // Basic text extraction from PDF (very simplified)
         const textMatches = text.match(/\(([^)]+)\)/g);
         if (textMatches && textMatches.length > 0) {
             return textMatches.map(match => match.slice(1, -1)).join(' ').substring(0, 5000);
         }
         
-        // Fallback: look for readable text patterns
         const readableText = text.replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
         if (readableText.length > 50) {
             return readableText.substring(0, 5000);
@@ -209,8 +249,6 @@ class TrustGraphedApp {
     }
 
     async readDocxFile(file) {
-        // For DOCX parsing, we'll implement a basic approach
-        // In production, you'd want to include mammoth.js or similar
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -228,11 +266,9 @@ class TrustGraphedApp {
     }
 
     async extractDocxText(arrayBuffer) {
-        // Simplified DOCX text extraction - replace with mammoth.js in production
         const uint8Array = new Uint8Array(arrayBuffer);
         const text = String.fromCharCode.apply(null, uint8Array);
         
-        // Look for text content patterns in DOCX XML
         const xmlMatches = text.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
         if (xmlMatches && xmlMatches.length > 0) {
             const extractedText = xmlMatches
@@ -248,17 +284,16 @@ class TrustGraphedApp {
         throw new Error('No readable text found in DOCX file');
     }
 
-    showFilePreview(filename, content) {
-        const preview = content.substring(0, 300) + (content.length > 300 ? '...' : '');
-        this.previewText.textContent = `📁 ${filename}\n\n${preview}`;
-        this.filePreview.classList.remove('hidden');
+    showFileInfo(filename) {
+        if (this.fileName) this.fileName.textContent = filename;
+        this.fileInfo?.classList.remove('hidden');
     }
 
     clearFile() {
-        this.fileInput.value = '';
+        if (this.fileInput) this.fileInput.value = '';
         this.currentFileContent = '';
-        this.filePreview.classList.add('hidden');
-        this.previewText.textContent = '';
+        this.fileInfo?.classList.add('hidden');
+        if (this.fileName) this.fileName.textContent = 'No file selected';
         this.validateInput();
     }
 
@@ -266,13 +301,13 @@ class TrustGraphedApp {
         let hasValidInput = false;
         
         if (this.currentInputMethod === 'text') {
-            const textContent = this.contentInput.value.trim();
+            const textContent = this.contentInput?.value.trim() || '';
             hasValidInput = textContent.length >= 10;
         } else {
             hasValidInput = this.currentFileContent.length >= 10;
         }
         
-        this.analyzeBtn.disabled = !hasValidInput;
+        if (this.analyzeBtn) this.analyzeBtn.disabled = !hasValidInput;
     }
 
     async testConnection() {
@@ -282,7 +317,6 @@ class TrustGraphedApp {
             console.log('Backend connection successful:', data);
         } catch (error) {
             console.error('Backend connection failed:', error);
-            this.showError('Unable to connect to backend service. Please check if the server is running.');
         }
     }
 
@@ -292,7 +326,7 @@ class TrustGraphedApp {
         let content = '';
         
         if (this.currentInputMethod === 'text') {
-            content = this.contentInput.value.trim();
+            content = this.contentInput?.value.trim() || '';
         } else {
             content = this.currentFileContent;
         }
@@ -346,42 +380,58 @@ class TrustGraphedApp {
         const { trust_evaluation, module_results, certificate_id, certificate, readable_summary } = data;
 
         // Update trust score
-        document.getElementById('trustScore').textContent = (trust_evaluation.trust_score * 100).toFixed(0);
-        document.getElementById('trustLevel').textContent = trust_evaluation.trust_level;
+        const trustScoreEl = document.getElementById('trustScore');
+        const trustLevelEl = document.getElementById('trustLevel');
+        if (trustScoreEl) trustScoreEl.textContent = (trust_evaluation.trust_score * 100).toFixed(0);
+        if (trustLevelEl) trustLevelEl.textContent = trust_evaluation.trust_level;
 
         // Update module results
         const sdg = module_results.source_data_grappler;
-        document.getElementById('assertionsCount').textContent = sdg.assertions_found;
-        document.getElementById('citationsCount').textContent = sdg.citations_found;
-        document.getElementById('extractionConfidence').textContent = (sdg.extraction_confidence * 100).toFixed(0);
+        const assertionsEl = document.getElementById('assertionsCount');
+        const citationsEl = document.getElementById('citationsCount');
+        const extractionEl = document.getElementById('extractionConfidence');
+        if (assertionsEl) assertionsEl.textContent = sdg.assertions_found;
+        if (citationsEl) citationsEl.textContent = sdg.citations_found;
+        if (extractionEl) extractionEl.textContent = (sdg.extraction_confidence * 100).toFixed(0);
 
         const aie = module_results.assertion_integrity;
-        document.getElementById('integrityScore').textContent = (aie.integrity_score * 100).toFixed(0);
-        document.getElementById('issuesFound').textContent = aie.issues_found;
+        const integrityEl = document.getElementById('integrityScore');
+        const issuesEl = document.getElementById('issuesFound');
+        if (integrityEl) integrityEl.textContent = (aie.integrity_score * 100).toFixed(0);
+        if (issuesEl) issuesEl.textContent = aie.issues_found;
 
         const cce = module_results.confidence_computation;
-        document.getElementById('overallConfidence').textContent = (cce.overall_confidence * 100).toFixed(0);
-        document.getElementById('highConfidenceCount').textContent = cce.high_confidence_assertions;
+        const overallEl = document.getElementById('overallConfidence');
+        const highConfEl = document.getElementById('highConfidenceCount');
+        if (overallEl) overallEl.textContent = (cce.overall_confidence * 100).toFixed(0);
+        if (highConfEl) highConfEl.textContent = cce.high_confidence_assertions;
 
         const zfp = module_results.zero_fabrication;
-        document.getElementById('authenticityScore').textContent = (zfp.authenticity_score * 100).toFixed(0);
-        document.getElementById('fabricationRisk').textContent = zfp.fabrication_risk;
-        document.getElementById('flagsDetected').textContent = zfp.flags_detected;
+        const authEl = document.getElementById('authenticityScore');
+        const fabRiskEl = document.getElementById('fabricationRisk');
+        const flagsEl = document.getElementById('flagsDetected');
+        if (authEl) authEl.textContent = (zfp.authenticity_score * 100).toFixed(0);
+        if (fabRiskEl) fabRiskEl.textContent = zfp.fabrication_risk;
+        if (flagsEl) flagsEl.textContent = zfp.flags_detected;
 
         // Update certificate info
-        document.getElementById('certificateId').textContent = certificate_id;
-        document.getElementById('readableSummary').textContent = readable_summary;
+        const certIdEl = document.getElementById('certificateId');
+        const summaryEl = document.getElementById('readableSummary');
+        if (certIdEl) certIdEl.textContent = certificate_id;
+        if (summaryEl) summaryEl.textContent = readable_summary;
 
         // Color-code trust score
-        const scoreElement = document.getElementById('trustScore').parentElement;
-        const score = trust_evaluation.trust_score;
-        
-        if (score >= 0.8) {
-            scoreElement.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
-        } else if (score >= 0.6) {
-            scoreElement.style.background = 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)';
-        } else {
-            scoreElement.style.background = 'linear-gradient(135deg, #e53e3e 0%, #c53030 100%)';
+        const scoreElement = trustScoreEl?.parentElement;
+        if (scoreElement) {
+            const score = trust_evaluation.trust_score;
+            
+            if (score >= 0.8) {
+                scoreElement.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+            } else if (score >= 0.6) {
+                scoreElement.style.background = 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)';
+            } else {
+                scoreElement.style.background = 'linear-gradient(135deg, #e53e3e 0%, #c53030 100%)';
+            }
         }
 
         this.showResults();
@@ -389,33 +439,34 @@ class TrustGraphedApp {
 
     setLoading(loading) {
         if (loading) {
-            this.analyzeBtn.disabled = true;
-            this.btnText.classList.add('hidden');
-            this.loadingSpinner.classList.remove('hidden');
+            if (this.analyzeBtn) this.analyzeBtn.disabled = true;
+            this.btnText?.classList.add('hidden');
+            this.loadingSpinner?.classList.remove('hidden');
         } else {
-            this.loadingSpinner.classList.add('hidden');
-            this.btnText.classList.remove('hidden');
-            this.validateInput(); // Re-validate to set correct disabled state
+            this.loadingSpinner?.classList.add('hidden');
+            this.btnText?.classList.remove('hidden');
+            this.validateInput();
         }
     }
 
     showResults() {
-        this.resultsSection.classList.remove('hidden');
-        this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+        this.resultsSection?.classList.remove('hidden');
+        this.resultsSection?.scrollIntoView({ behavior: 'smooth' });
     }
 
     hideResults() {
-        this.resultsSection.classList.add('hidden');
+        this.resultsSection?.classList.add('hidden');
     }
 
     showError(message) {
-        document.getElementById('errorMessage').textContent = message;
-        this.errorSection.classList.remove('hidden');
-        this.errorSection.scrollIntoView({ behavior: 'smooth' });
+        const errorMessageEl = document.getElementById('errorMessage');
+        if (errorMessageEl) errorMessageEl.textContent = message;
+        this.errorSection?.classList.remove('hidden');
+        this.errorSection?.scrollIntoView({ behavior: 'smooth' });
     }
 
     hideError() {
-        this.errorSection.classList.add('hidden');
+        this.errorSection?.classList.add('hidden');
     }
 }
 
@@ -424,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new TrustGraphedApp();
 });
 
-// Debug helper - available in console
+// Debug helper
 window.testEvaluate = async function(content = "This is a test content with some claims that need verification.") {
     try {
         const response = await fetch('/evaluate', {
