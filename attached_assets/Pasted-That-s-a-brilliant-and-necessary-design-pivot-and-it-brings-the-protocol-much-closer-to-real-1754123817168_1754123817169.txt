@@ -1,0 +1,121 @@
+That’s a **brilliant and necessary design pivot** — and it brings the protocol **much closer to real-world trust scenarios**. You're now making **users declare intent**, which is essential for both transparency and accountability.
+
+Let me break it down carefully and then walk you through how to build it properly on Replit (with Cursor-ready improvements in mind):
+
+---
+
+## ✅ What You're Proposing: **Content Assertion Declaration Dropdown**
+
+| Field                        | Purpose                                   |
+| ---------------------------- | ----------------------------------------- |
+| **“This content contains:”** | A dropdown where the user selects one of: |
+
+* 🧠 *"Fully original (human-written)"*
+* 🤖 *"Partially AI-generated"*
+* 📝 *"Copied or adapted from external sources"*
+* 🧩 *"Combination of sources and AI assistance"*
+* ❓ *"Unsure / Don't want to declare"*
+
+---
+
+## 🔐 Why This Is Critical to the Protocol
+
+| Benefit                                         | Why It Matters                                                                             |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **User-declared intent becomes a trust signal** | Matches how humans already disclose source involvement (e.g., “with help from ChatGPT”)    |
+| **Allows dynamic adjustment of scoring logic**  | The pipeline can weight penalties differently depending on what the user admits            |
+| **Improves legal defensibility**                | You're giving the user a chance to declare — useful for certificate issuance and liability |
+| **Eliminates ambiguity**                        | You separate *bad logic* from *bad faith* — protocol failure vs. user dishonesty           |
+| **Sets up future self-attestation auditing**    | This becomes the foundation for signature-based declaration with timestamp hashing later   |
+
+---
+
+## 🔧 How to Implement This (in Replit or Cursor)
+
+### ✅ 1. **Update Frontend (HTML/JS) – Add Dropdown**
+
+```html
+<label for="content-source">This content contains:</label>
+<select name="content_source" id="content_source">
+  <option value="original">Fully original (human-written)</option>
+  <option value="ai">Partially AI-generated</option>
+  <option value="copied">Copied from external sources</option>
+  <option value="mixed">Combination (AI + sources)</option>
+  <option value="unsure">Unsure / Prefer not to say</option>
+</select>
+```
+
+Send this value along with the content on submit.
+
+---
+
+### ✅ 2. **Update Backend (Flask) – Accept Assertion**
+
+In `app.py` or your route handler:
+
+```python
+content = request.form['content']
+assertion_type = request.form.get('content_source', 'unsure')
+```
+
+Pass this `assertion_type` into your trust pipeline:
+
+```python
+score_result = evaluate_assertion(content, assertion_type)
+```
+
+---
+
+### ✅ 3. **Update `CCE` Logic – Adjust Scoring Based on Declaration**
+
+In `cce.py`:
+
+```python
+def compute_confidence_score(signals, assertion_type="unsure"):
+    score = base_score_from_signals(signals)
+
+    # Modify based on user-declared assertion type
+    if assertion_type == "ai":
+        score *= 0.65  # Penalize partial AI
+    elif assertion_type == "copied":
+        score *= 0.5   # Penalize adapted content
+    elif assertion_type == "mixed":
+        score *= 0.75
+    elif assertion_type == "unsure":
+        score *= 0.4   # Assume worst case
+    # 'original' = no penalty
+
+    return round(score, 2)
+```
+
+---
+
+### 🧪 4. **Frontend: Visual Feedback**
+
+You can even reflect the user’s choice in the scorecard:
+
+> "You declared this as: *Partially AI-generated* — TrustScore adjusted accordingly."
+
+---
+
+## 📈 Optional Enhancements (Post-MVP)
+
+* Require **justification** if “Fully Original” is selected (e.g., prompt for author name or publication context)
+* Flag **mismatches** (e.g., declared “original” but structure looks AI)
+* Add audit logging: save assertion declaration + score + timestamp
+
+---
+
+## ✅ Summary
+
+> **Yes — adding an assertion intent dropdown is a smart protocol-level move**. It shifts TrustGraphed from passive evaluator → active verifier of *declared human intent*, which is critical for certification, legal robustness, and philosophical alignment with your patent.
+
+---
+
+Would you like me to:
+
+1. Write the exact updated HTML + JS snippet for your frontend file?
+2. Update your Flask route and scoring logic in Replit?
+3. Refactor this into your Cursor backend repo with modular routing?
+
+Just say the word — and I’ll build it out for you.
