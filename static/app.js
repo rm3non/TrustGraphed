@@ -678,8 +678,30 @@ class TrustGraphedApp {
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new TrustGraphedApp();
+    window.trustGraphedApp = new TrustGraphedApp();
 });
+
+// Utility functions for navigation
+function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToDemo() {
+    const demoSection = document.getElementById('demo');
+    if (demoSection) {
+        demoSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    // Open the evaluation modal after scrolling
+    setTimeout(() => {
+        const app = window.trustGraphedApp;
+        if (app) {
+            app.openModal();
+        }
+    }, 500);
+}
 
 // Debug helpers
 window.testEvaluate = async function(content = "This is a test content with some claims that need verification.") {

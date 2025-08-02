@@ -214,53 +214,154 @@
                 <p>Experience the TrustGraphed protocol in action</p>
             </div>
 
-            <div class="demo-container">
-                <div class="input-section">
-                    <div class="input-tabs">
-                        <button class="tab-btn active" onclick="switchTab('text')">Text Input</button>
-                        <button class="tab-btn" onclick="switchTab('file')">File Upload</button>
-                    </div>
-                    
-                    <div id="textTab" class="tab-content active">
-                        <textarea id="contentInput" placeholder="Paste your content here for trust evaluation..."></textarea>
-                        <button id="evaluateBtn" class="btn-primary" onclick="evaluateContent()">
-                            <i class="fas fa-microscope"></i>
-                            Evaluate Content
-                        </button>
-                    </div>
-                    
-                    <div id="fileTab" class="tab-content">
-                        <div class="file-upload">
-                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx" />
-                            <label for="fileInput">
-                                <i class="fas fa-upload"></i>
-                                Choose File (.txt, .pdf, .docx)
-                            </label>
-                        </div>
-                        <button id="evaluateFileBtn" class="btn-primary" onclick="evaluateFile()">
-                            <i class="fas fa-microscope"></i>
-                            Evaluate File
-                        </button>
-                    </div>
-                </div>
-
-                <div class="results-section" id="resultsSection" style="display: none;">
-                    <div class="trust-score-display">
-                        <div class="score-circle">
-                            <span id="trustScore">0.0</span>
-                        </div>
-                        <div class="score-details">
-                            <h3 id="trustLevel">Evaluating...</h3>
-                            <p id="certificateId">Certificate: TG_PENDING</p>
-                        </div>
-                    </div>
-                    
-                    <div class="component-scores" id="componentScores"></div>
-                    <div class="insights-section" id="insights"></div>
-                </div>
+            <div class="demo-actions">
+                <button id="startEvaluationBtn" class="btn-primary">
+                    <i class="fas fa-microscope"></i>
+                    Start Evaluation
+                </button>
+                <button id="uploadPasteBtn" class="btn-secondary">
+                    <i class="fas fa-upload"></i>
+                    Upload & Analyze
+                </button>
             </div>
         </div>
     </section>
+
+    <!-- Evaluation Modal -->
+    <div id="evaluationModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 TrustGraphed Evaluation</h2>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="evaluationForm">
+                    <div class="input-tabs">
+                        <button type="button" id="textTab" class="tab-btn active">Text Input</button>
+                        <button type="button" id="fileTab" class="tab-btn">File Upload</button>
+                    </div>
+                    
+                    <div id="textInputSection" class="input-method active">
+                        <textarea id="contentInput" placeholder="Paste your content here for comprehensive trust evaluation...
+
+Example: Research papers, news articles, reports, or any text content requiring verification."></textarea>
+                    </div>
+                    
+                    <div id="fileInputSection" class="input-method hidden">
+                        <div id="dropZone" class="file-drop-zone">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <h4>Drop your file here or click to browse</h4>
+                            <p class="file-format-hint">Supports: .txt, .pdf, .docx (max 10MB)</p>
+                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx" hidden />
+                        </div>
+                        
+                        <div id="fileInfo" class="file-info hidden">
+                            <span>📄 <span id="fileName">No file selected</span></span>
+                            <button type="button" id="removeFile">&times;</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="analyzeBtn" class="btn-primary" disabled>
+                        <span id="btnText">
+                            <i class="fas fa-microscope"></i>
+                            Analyze Content
+                        </span>
+                        <span id="loadingSpinner" class="spinner hidden">
+                            <i class="fas fa-spinner"></i>
+                            Processing...
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section hidden">
+                    <div class="trust-score-card">
+                        <div class="score-circle">
+                            <span id="trustScore">85</span>
+                            <small>Trust Score</small>
+                        </div>
+                        <div>
+                            <h3 id="trustLevel" class="trust-level">High Trust</h3>
+                            <p id="certificateId">Certificate: TG_2024_001234</p>
+                        </div>
+                    </div>
+
+                    <div class="modules-grid">
+                        <div class="module-card">
+                            <h4>🔍 Source Data Grappler</h4>
+                            <p><strong>Assertions:</strong> <span id="assertionsCount">12</span></p>
+                            <p><strong>Citations:</strong> <span id="citationsCount">8</span></p>
+                            <p><strong>Confidence:</strong> <span id="extractionConfidence">92</span>%</p>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>⚖️ Assertion Integrity</h4>
+                            <p><strong>Integrity Score:</strong> <span id="integrityScore">88</span>%</p>
+                            <p><strong>Issues Found:</strong> <span id="issuesFound">2</span></p>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>📊 Confidence Computation</h4>
+                            <p><strong>Overall Confidence:</strong> <span id="overallConfidence">85</span>%</p>
+                            <p><strong>High Confidence:</strong> <span id="highConfidenceCount">9</span></p>
+                        </div>
+                        
+                        <div class="module-card">
+                            <h4>🤖 Zero-Fabrication</h4>
+                            <p><strong>Authenticity:</strong> <span id="authenticityScore">91</span>%</p>
+                            <p><strong>Risk Level:</strong> <span id="fabricationRisk">Low</span></p>
+                            <p><strong>Flags:</strong> <span id="flagsDetected">0</span></p>
+                        </div>
+                    </div>
+
+                    <div class="certificate-section">
+                        <h4>🔐 Verification Certificate</h4>
+                        <p><strong>Certificate ID:</strong> <span id="certificateId">TG_2024_001234</span></p>
+                        <p id="readableSummary">Content evaluated successfully with high trust indicators</p>
+                    </div>
+
+                    <!-- Detailed Explanation Section -->
+                    <div id="detailedExplanationSection" class="detailed-explanation-section hidden">
+                        <h4>📊 Detailed Analysis Report</h4>
+                        <button type="button" id="toggleDetailedReport" class="btn-secondary">Show Detailed Analysis</button>
+                        
+                        <div id="detailedReport" class="detailed-report hidden">
+                            <div class="explanation-card">
+                                <h5>🎯 Overall Score Explanation</h5>
+                                <div id="overallExplanation" class="explanation-content"></div>
+                            </div>
+                            
+                            <div class="explanation-card">
+                                <h5>⚖️ Score Breakdown</h5>
+                                <div id="scoreBreakdown" class="score-breakdown"></div>
+                            </div>
+                            
+                            <div class="explanation-card">
+                                <h5>🔍 Component Analysis</h5>
+                                <div id="componentAnalysis" class="component-analysis"></div>
+                            </div>
+                            
+                            <div class="explanation-card">
+                                <h5>📋 Methodology</h5>
+                                <div id="methodologyDetails" class="methodology-details"></div>
+                            </div>
+                            
+                            <div class="explanation-card">
+                                <h5>💡 Recommendations</h5>
+                                <div id="recommendations" class="recommendations"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Section -->
+                <div id="errorSection" class="error-section hidden">
+                    <h4>⚠️ Evaluation Error</h4>
+                    <p id="errorMessage">An error occurred during evaluation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Roadmap Section -->
     <section class="roadmap-section" id="roadmap">
