@@ -1,4 +1,3 @@
-
 """
 TrustGraphed Confidence Computation Engine (CCE)
 Consolidated scoring logic with rule-based penalties and assertion type weighting
@@ -149,7 +148,7 @@ class ConfidenceComputationEngine:
 def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
     """
     CONSOLIDATED TrustScore computation with rule-based penalties and trapdoors.
-    
+
     Parameters:
         signals (dict): Extracted content signals
             - assertions: int (count of assertions found)
@@ -158,63 +157,63 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
             - author_detected: bool (author/metadata present)
             - ai_likelihood: float (0-1, AI generation probability)
         assertion_type (str): User declaration - original, ai, copied, mixed, unsure
-    
+
     Returns:
         dict: {final_score, band, breakdown, insights}
     """
-    
+
     # ========== RULE-BASED SCORING SYSTEM ==========
-    
-    # Base score starts at 50 for having content
-    base_score = 50
-    breakdown = {
-        "starting_base": 50,
-        "citation_contribution": 0,
-        "author_bonus": 0,
-        "contradiction_penalty": 0,
-        "transparency_alignment_penalty": 0,
-        "trapdoor_applied": False,
-        "transparency_multiplier": 1.0,
-        "final_score": 0
-    }
-    
-    # ========== CITATION SCORING (Max +40 points) ==========
+
+    # ========== BASE SCORING (0-100 points) ==========
+    base_score = 60  # Start with higher neutral baseline for more reasonable ranges
+
+    # ========== ASSERTION SCORING (Max +20 points) ==========
+    assertions = signals.get("assertions", 0)
+    if assertions > 0:
+        # More generous assertion scoring with better progression
+        assertion_score = min(assertions * 2.5, 20)
+        base_score += assertion_score
+        breakdown["assertion_contribution"] = assertion_score
+
+    # ========== CITATION SCORING (Max +20 points) ==========
     citations = signals.get("citations", 0)
     if citations > 0:
-        # Progressive citation scoring: 1 = +15, 2 = +25, 3+ = +40
+        # Improved citation scoring with better progression
         if citations == 1:
-            citation_score = 15
+            citation_score = 10
         elif citations == 2:
-            citation_score = 25
+            citation_score = 15
+        elif citations >= 3:
+            citation_score = 20
         else:
-            citation_score = 40
-        
+            citation_score = min(citations * 6, 20)
+
         base_score += citation_score
         breakdown["citation_contribution"] = citation_score
-    
+
     # ========== AUTHOR/METADATA BONUS (+10 points) ==========
     if signals.get("author_detected", False):
         base_score += 10
         breakdown["author_bonus"] = 10
-    
+
     # ========== CONTRADICTION PENALTY (Max -30 points) ==========
     contradictions = signals.get("contradictions", 0)
     if contradictions > 0:
         contradiction_penalty = min(contradictions * 10, 30)
         base_score -= contradiction_penalty
         breakdown["contradiction_penalty"] = contradiction_penalty
-    
+
     # ========== TRANSPARENCY ALIGNMENT VERIFICATION ==========
     ai_likelihood = signals.get("ai_likelihood", 0)
     transparency_penalty = 0
-    
+
     # Penalize misalignment between declaration and detected characteristics
     if assertion_type.lower() == "original" and ai_likelihood > 0.6:
         # High AI likelihood but claimed as original = transparency issue
         transparency_penalty = int(ai_likelihood * 20)  # Up to 20 point penalty
         breakdown["transparency_alignment_penalty"] = transparency_penalty
         base_score -= transparency_penalty
-    
+
     # ========== HARD TRAPDOORS (Zero-Fabrication Enforcement) ==========
     # Trapdoor 1: No citations + No author = Fabrication risk
     if citations == 0 and not signals.get("author_detected", False):
@@ -225,12 +224,12 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
             # Standard trapdoor for undeclared content
             base_score = min(base_score, 25)
         breakdown["trapdoor_applied"] = True
-    
+
     # Trapdoor 2: High AI + Original claim = Max 30 points
     if assertion_type.lower() == "original" and ai_likelihood > 0.7:
         base_score = min(base_score, 30)
         breakdown["trapdoor_applied"] = True
-    
+
     # ========== ASSERTION TYPE TRANSPARENCY MULTIPLIERS ==========
     transparency_multipliers = {
         "original": 1.0,     # Standard evaluation 
@@ -239,17 +238,17 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
         "mixed": 1.15,       # 15% BONUS for transparent mixed sources declaration  
         "unsure": 0.70       # 30% PENALTY for undeclared content - encourages transparency
     }
-    
+
     transparency_multiplier = transparency_multipliers.get(assertion_type.lower(), 0.80)
     breakdown["transparency_multiplier"] = transparency_multiplier
-    
+
     # Apply transparency multiplier
     final_score = base_score * transparency_multiplier
-    
+
     # Clamp final score between 0 and 100
     final_score = max(0, min(100, round(final_score, 1)))
     breakdown["final_score"] = final_score
-    
+
     # ========== TRUST BAND CLASSIFICATION ==========
     if final_score >= 75:
         band = "High Trust"
@@ -263,10 +262,10 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
     else:
         band = "Unverified"
         trust_level = "VERY LOW"
-    
+
     # ========== GENERATE INSIGHTS ==========
     insights = []
-    
+
     # Citation insights
     if citations == 0:
         insights.append("⚠️ No citations found - claims lack supporting evidence")
@@ -274,27 +273,27 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
         insights.append("📄 Single citation found - additional sources would strengthen credibility")
     elif citations >= 3:
         insights.append("✅ Well-cited content with multiple supporting sources")
-    
+
     # Transparency insights  
     if assertion_type.lower() in ["ai", "copied", "mixed"]:
         insights.append("✅ TRANSPARENCY: Content sources openly declared - builds reader trust")
     elif assertion_type.lower() == "unsure":
         insights.append("⚠️ Content source undeclared - readers cannot assess information origin")
-    
+
     # AI alignment insights
     if assertion_type.lower() == "original" and ai_likelihood > 0.6:
         insights.append("🚨 TRANSPARENCY MISMATCH: High AI characteristics detected but claimed as original")
-    
+
     # Trapdoor insights
     if breakdown["trapdoor_applied"]:
         insights.append("⛔ TRAPDOOR ACTIVATED: Critical trust factors missing - score capped")
-    
+
     # Overall score insight
     if final_score >= 75:
         insights.append("🎯 High trust score - content demonstrates strong credibility indicators")
     elif final_score < 25:
         insights.append("📉 Very low trust score - recommend additional verification before use")
-    
+
     return {
         "final_score": final_score,
         "band": band,
