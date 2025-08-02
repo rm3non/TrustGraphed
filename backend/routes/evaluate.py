@@ -4,12 +4,16 @@ TrustGraphed Evaluation Routes
 """
 
 from flask import Blueprint, request, jsonify
-from ..utils.sdg import SourceDataGrappler
-from ..utils.aie import AssertionIntegrityEngine
-from ..utils.cce import ConfidenceComputationEngine
-from ..utils.zfp import ZeroFabricationProtocol
-from ..utils.score_engine import TrustScoreEngine
-from ..utils.certificate import CertificateGenerator
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils.sdg import SourceDataGrappler
+from utils.aie import AssertionIntegrityEngine
+from utils.cce import ConfidenceComputationEngine
+from utils.zfp import ZeroFabricationProtocol
+from utils.score_engine import TrustScoreEngine
+from utils.certificate import CertificateGenerator
 
 evaluate_bp = Blueprint('evaluate', __name__)
 
