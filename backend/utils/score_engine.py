@@ -4,7 +4,7 @@ Aggregates all module results into a final trust score
 """
 
 from typing import Dict, Any
-from .cce import compute_confidence_score
+from .cce import compute_trust_score
 
 class TrustScoreEngine:
     def __init__(self):
@@ -22,8 +22,9 @@ class TrustScoreEngine:
         # Extract signals from module results
         signals = self._extract_signals(module_results)
 
-        # Use new scoring logic
-        score_data = compute_confidence_score(signals, assertion_type)
+        # Use consolidated scoring logic from CCE
+        from .cce import compute_trust_score
+        score_data = compute_trust_score(signals, assertion_type)
 
         # Build component scores for transparency
         component_scores = self._build_component_scores(module_results)
