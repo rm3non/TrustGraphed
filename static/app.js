@@ -606,6 +606,23 @@ class TrustGraphedApp {
             recommendations.innerHTML = recHTML;
         }
     }
+
+    createDetailedExplanationContainer(explanation) {
+        const resultsSection = document.getElementById('resultsSection');
+        if (!resultsSection) return;
+
+        const explanationDiv = document.createElement('div');
+        explanationDiv.id = 'detailedExplanation';
+        explanationDiv.className = 'detailed-explanation';
+        explanationDiv.innerHTML = `
+            <h4>📋 Detailed Analysis</h4>
+            <div class="explanation-content">
+                ${explanation.split('\n').map(line => `<p>${line}</p>`).join('')}
+            </div>
+        `;
+
+        resultsSection.appendChild(explanationDiv);
+    }
 }
 
 // Initialize the app when DOM is loaded

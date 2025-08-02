@@ -758,6 +758,28 @@ body {
     color: #2d3748;
 }
 
+.detailed-explanation {
+    background: #f8f9ff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-top: 20px;
+}
+
+.detailed-explanation h4 {
+    margin-bottom: 10px;
+    color: #2d3748;
+    font-size: 1rem;
+}
+
+.explanation-content p {
+    margin-bottom: 8px;
+    color: #4a5568;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}d3748;
+}
+
 /* Detailed Explanation Styles */
 .detailed-explanation-section {
     margin-top: 30px;
