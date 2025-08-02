@@ -8,6 +8,7 @@ localPort = 5000
 externalPort = 80
 [deployment]
 deploymentTarget = "auto"
+run = ["sh", "-c", "cd backend && python3 app.py"]
 
 [workflows]
 runButton = "Run"
