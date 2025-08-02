@@ -1,0 +1,56 @@
+Here is your **complete Replit Assistant prompt** tailored for your current TrustGraphed backend structure, designed to **build all 6 modules, wire them into the `/evaluate` endpoint, and return a TrustScore with dummy logic**.
+
+---
+
+### ✅ Copy–Paste This into Replit AI:
+
+````python
+You're working in a full-stack Flask project called TrustGraphed. The backend is located in `/backend/`, with `app.py` as the entrypoint and a working `/health` route. CORS is enabled, and the backend is structured with `utils/` and `routes/`.
+
+📌 TASK:
+Build the full modular logic pipeline for assertion trust evaluation using 6 core modules. Implement the following with dummy logic (for now):
+
+🧠 MODULES (in /backend/utils/):
+1. `sdg.py` — Source Data Grappler: extract 3 fake assertions from input text.
+2. `aie.py` — Assertion Integrity Engine: return dummy results like “no contradiction found”.
+3. `cce.py` — Confidence Computation Engine: assign a fake confidence score between 0.7 and 0.95 to each assertion.
+4. `zfp.py` — Zero-Fabrication Protocol: return “No hallucination detected”.
+5. `score_engine.py` — TrustScore Engine: average confidence score and return final score out of 100.
+6. `certificate.py` — Certificate Generator: return a dummy certificate JSON with UUID, timestamp, TrustScore.
+
+🛠️ ENDPOINT:
+- Create a new route file `/backend/routes/evaluate.py`.
+- Register it as a blueprint in `app.py`.
+- Expose POST `/evaluate` which takes JSON `{ "content": "..." }`, passes it through all modules, and returns:
+
+```json
+{
+  "summary": "Trust evaluation complete",
+  "trust_score": 87.5,
+  "details": {
+    "assertions": [...],
+    "aie": "No contradiction found",
+    "cce_scores": [...],
+    "zfp_result": "No hallucination detected"
+  },
+  "certificate": { "uuid": "abc-123", "issued_at": "...", ... }
+}
+````
+
+🎯 GOAL:
+Make sure `/evaluate` returns the above structure with dummy logic, wired through all 6 utils. The app must still run via `python3 backend/app.py`, with no errors.
+
+```
+
+---
+
+### 🔁 Once That’s Done:
+
+You’ll be ready to:
+
+- Call `/evaluate` from Postman or frontend
+- Replace dummy logic with real ML/NLP models or heuristics
+- Begin rendering results in your frontend
+
+Let me know when it’s done, and I’ll generate the next prompt for rendering this in your frontend UI. You're now executing the protocol as described in your patent.
+```
