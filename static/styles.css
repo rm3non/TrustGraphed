@@ -746,9 +746,28 @@ body {
 }
 
 .trust-level {
+    font-size: 1.2rem;
     font-weight: 700;
-    font-size: 1.25rem;
-    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.trustgraphed-timestamp {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.5rem;
+    font-style: italic;
+}
+
+.trustgraphed-timestamp strong {
+    color: var(--accent-blue);
+    font-weight: 600;
 }
 
 /* Roadmap Section */

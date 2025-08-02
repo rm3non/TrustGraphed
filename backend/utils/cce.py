@@ -163,6 +163,9 @@ def compute_trust_score(signals: dict, assertion_type: str = "unsure") -> dict:
     """
 
     # ========== RULE-BASED SCORING SYSTEM ==========
+    
+    # Initialize breakdown dictionary
+    breakdown = {}
 
     # ========== BASE SCORING (0-100 points) ==========
     base_score = 60  # Start with higher neutral baseline for more reasonable ranges

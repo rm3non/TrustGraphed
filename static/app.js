@@ -1071,15 +1071,38 @@ function displayResults(data) {
     // Hide loading indicator
     showLoading(false);
 
+    // Extract data for display
+    const { trust_evaluation: { trust_score, trust_level, disclaimer, insights } = {}, module_results = {} } = data;
+    const { source_data_grappler: { extraction_confidence } = {}, assertion_integrity: { integrity_score } = {}, confidence_computation: { overall_confidence } = {}, zero_fabrication: { authenticity_score } = {} } = module_results;
+
+    // Build score section with detailed breakdown
+    const scoreSection = `
+        <div class="score-section">
+            <div class="trust-score-display">
+                <div class="score-circle">
+                    <div class="score-text">
+                        <span class="score-number">${Math.round(trust_score * 100)}</span>
+                        <span class="score-label">Trust Score</span>
+                    </div>
+                </div>
+                <div class="trust-level ${trust_level.toLowerCase().replace(' ', '-')}">
+                    ${trust_level} TRUST
+                </div>
+                <div class="trustgraphed-timestamp">
+                    This document was <strong>TrustGraphed</strong> on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+                </div>
+            </div>
+`;
+
     // Display trust score
-    document.getElementById('trustScoreValue').innerText = (data.trust_evaluation.trust_score * 100).toFixed(2) + '%';
-    document.getElementById('trustScoreLabel').innerText = data.trust_evaluation.trust_level;
+    document.getElementById('trustScoreValue').innerText = (trust_score * 100).toFixed(2) + '%';
+    document.getElementById('trustScoreLabel').innerText = trust_level;
 
     // Display component scores
-    document.getElementById('sourceDataGrapplerScore').innerText = (data.module_results.source_data_grappler.extraction_confidence * 100).toFixed(2) + '%';
-    document.getElementById('assertionIntegrityScore').innerText = (data.module_results.assertion_integrity.integrity_score * 100).toFixed(2) + '%';
-    document.getElementById('confidenceComputationScore').innerText = (data.module_results.confidence_computation.overall_confidence * 100).toFixed(2) + '%';
-    document.getElementById('zeroFabricationScore').innerText = (data.module_results.zero_fabrication.authenticity_score * 100).toFixed(2) + '%';
+    document.getElementById('sourceDataGrapplerScore').innerText = (extraction_confidence * 100).toFixed(2) + '%';
+    document.getElementById('assertionIntegrityScore').innerText = (integrity_score * 100).toFixed(2) + '%';
+    document.getElementById('confidenceComputationScore').innerText = (overall_confidence * 100).toFixed(2) + '%';
+    document.getElementById('zeroFabricationScore').innerText = (authenticity_score * 100).toFixed(2) + '%';
 
     // Show results
     document.getElementById('resultsContainer').classList.remove('hidden');
@@ -1089,44 +1112,44 @@ function displayResults(data) {
     document.getElementById('componentScores').classList.remove('hidden');
 
     // Display disclaimer with score explanation
-        const disclaimerContainer = document.getElementById('disclaimer');
-        if (disclaimerContainer && data.trust_evaluation.disclaimer) {
-            disclaimerContainer.innerHTML = `
-                <div class="disclaimer-box">
-                    <h4>📋 Score Explanation</h4>
-                    <p class="disclaimer-text">${data.trust_evaluation.disclaimer}</p>
-                </div>
-            `;
-        }
-
-        // Show input method used
-        const inputMethodDisplay = document.createElement('div');
-        inputMethodDisplay.className = 'input-method-display';
-        inputMethodDisplay.style.cssText = 'margin-top: 1rem; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 6px; font-size: 0.875rem; color: var(--text-secondary);';
-
-        const inputType = this.currentInputMethod === 'file' ? 'uploaded file' : 'typed content';
-        inputMethodDisplay.innerHTML = `
-            <i class="fas fa-${this.currentInputMethod === 'file' ? 'file' : 'keyboard'}"></i>
-            Evaluated from: <strong style="color: var(--text-primary);">${inputType}</strong>
-        `;
-
-        const resultsSection = document.getElementById('resultsSection');
-        if (resultsSection && !document.querySelector('.input-method-display')) {
-            resultsSection.appendChild(inputMethodDisplay);
-        }
-
-    // Display insights
-    const insightsContainer = document.getElementById('insights');
-    if (insightsContainer && data.trust_evaluation.insights) {
-        insightsContainer.innerHTML = `
-            <h4>🔍 Analysis Insights</h4>
-            <ul>
-                ${data.trust_evaluation.insights.map(insight => `<li>${insight}</li>`).join('')}
-            </ul>
+    const disclaimerContainer = document.getElementById('disclaimer');
+    if (disclaimerContainer && disclaimer) {
+        disclaimerContainer.innerHTML = `
+            <div class="disclaimer-box">
+                <h4>📋 Score Explanation</h4>
+                <p class="disclaimer-text">${disclaimer}</p>
+            </div>
         `;
     }
 
+    // Show input method used
+    const inputMethodDisplay = document.createElement('div');
+    inputMethodDisplay.className = 'input-method-display';
+    inputMethodDisplay.style.cssText = 'margin-top: 1rem; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 6px; font-size: 0.875rem; color: var(--text-secondary);';
+
+    const inputType = this.currentInputMethod === 'file' ? 'uploaded file' : 'typed content';
+    inputMethodDisplay.innerHTML = `
+        <i class="fas fa-${this.currentInputMethod === 'file' ? 'file' : 'keyboard'}"></i>
+        Evaluated from: <strong style="color: var(--text-primary);">${inputType}</strong>
+    `;
+
+    const resultsSection = document.getElementById('resultsSection');
+    if (resultsSection && !document.querySelector('.input-method-display')) {
+        resultsSection.appendChild(inputMethodDisplay);
+    }
+
+    // Display insights
+    const insightsContainer = document.getElementById('insights');
+    if (insightsContainer && insights) {
+        insightsContainer.innerHTML = `
+            <h4>🔍 Analysis Insights</h4>
+            <ul>
+                ${insights.map(insight => `<li>${insight}</li>`).join('')}
+            </ul>
+        `;
+    }
 }
+
 function showLoading(isLoading) {
     const loadingOverlay = document.getElementById('loadingOverlay');
     if (loadingOverlay) {
