@@ -942,3 +942,53 @@ body {
     outline: 2px solid var(--accent-blue);
     outline-offset: 2px;
 }
+
+.upload-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .content-assertion-section {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .assertion-label {
+            display: block;
+            color: #2d3748;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .assertion-dropdown {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            background: white;
+            color: #2d3748;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .assertion-dropdown:hover {
+            border-color: #4299e1;
+        }
+
+        .assertion-dropdown:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .assertion-note {
+            margin-top: 0.75rem;
+            color: #718096;
+            font-size: 0.9rem;
+            font-style: italic;
+        }

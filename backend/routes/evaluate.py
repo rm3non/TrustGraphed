@@ -134,59 +134,45 @@ def evaluate_content():
     Main evaluation endpoint - processes content through all 6 TrustGraphed modules.
     """
     try:
-        # Handle both file uploads and text input
-        content = ""
+        # Get content assertion if provided
+        content_assertion = None
 
+        # Handle both file uploads and direct text input
         if 'file' in request.files:
-            # File upload mode
-            uploaded_file = request.files['file']
-
-            if uploaded_file.filename == '' or uploaded_file.filename is None:
-                return jsonify({"error": "No file selected"}), 400
-
-            # Validate file size (10MB limit)
-            file_size = len(uploaded_file.read())
-            uploaded_file.seek(0)  # Reset file pointer
-
-            if file_size == 0:
-                return jsonify({"error": "File is empty"}), 400
-
-            if file_size > 10 * 1024 * 1024:  # 10MB limit
-                return jsonify({"error": "File size exceeds 10MB limit"}), 400
-
-            # Extract text from file
-            try:
-                content = extract_text_from_file(uploaded_file)
-
-                # Log successful extraction for debugging
-                print(f"Successfully extracted {len(content)} characters from {uploaded_file.filename}")
-
-            except ValueError as e:
-                error_msg = str(e) if str(e) else "Unknown file processing error"
-                print(f"ValueError processing file '{uploaded_file.filename}': {error_msg}")
+            file = request.files['file']
+            if file.filename == '':
                 return jsonify({
-                    "error": f"File processing error: {error_msg}",
-                    "filename": uploaded_file.filename,
-                    "status": "failed"
+                    'status': 'error',
+                    'message': 'No file selected'
                 }), 400
-            except Exception as e:
-                error_msg = str(e) if str(e) else "Unknown unexpected error"
-                print(f"Exception processing file '{uploaded_file.filename}': {error_msg}")
-                print(f"Exception type: {type(e).__name__}")
+
+            # Get content assertion from form data
+            content_assertion = request.form.get('content_assertion', 'unsure')
+
+            # Extract text content from file
+            content = extract_text_from_file(file)
+            if not content:
                 return jsonify({
-                    "error": f"Unexpected file processing error: {error_msg}",
-                    "filename": uploaded_file.filename,
-                    "status": "failed"
-                }), 500
+                    'status': 'error',
+                    'message': 'Unable to extract text from file'
+                }), 400
 
         elif request.is_json:
-            # Text input mode
-            data = request.get_json()
-            if not data or 'content' not in data:
-                return jsonify({"error": "Missing 'content' field in request body"}), 400
-            content = data['content']
+            content = request.get_json()
+            if not content or 'content' not in content:
+                 return jsonify({
+                    'status': 'error',
+                    'message': 'No content provided'
+                }), 400
+
+            # Get content assertion from JSON
+            content_assertion = content.get('content_assertion', 'unsure')
+            content = content['content']
         else:
-            return jsonify({"error": "Please provide content via JSON or file upload"}), 400
+            return jsonify({
+                'status': 'error',
+                'message': 'No content provided'
+            }), 400
 
         if not content or len(content.strip()) < 10:
             return jsonify({"error": "Content must be at least 10 characters long"}), 400

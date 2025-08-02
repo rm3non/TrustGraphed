@@ -152,6 +152,27 @@ class ConfidenceComputationEngine:
         
         return trapdoors
     
+    def calculate_assertion_penalty(self, content_assertion: str, base_score: float) -> float:
+        """Apply scoring adjustments based on user-declared content assertion."""
+        # Map assertion types to penalty multipliers
+        assertion_multipliers = {
+            "original": 1.0,      # No penalty - user claims full originality
+            "ai": 0.6,           # Significant penalty for admitted AI content  
+            "copied": 0.4,       # Heavy penalty for copied content
+            "mixed": 0.7,        # Moderate penalty for mixed sources
+            "unsure": 0.3        # Heaviest penalty for unclear provenance
+        }
+        
+        multiplier = assertion_multipliers.get(content_assertion, 0.3)
+        adjusted_score = base_score * multiplier
+        
+        # However, if user admits AI/copied but score was already low, 
+        # give slight credit for honesty (minimum 0.05 boost)
+        if content_assertion in ["ai", "copied", "mixed"] and base_score < 0.3:
+            adjusted_score = min(adjusted_score + 0.05, 0.5)
+        
+        return round(adjusted_score, 3)
+    
     def compute_assertion_confidence(self, assertion: str, citations: List[str]) -> float:
         """Compute confidence score for a single assertion with hard rules."""
         # Apply trapdoors first
@@ -174,7 +195,7 @@ class ConfidenceComputationEngine:
         
         return min(1.0, confidence)
     
-    def process(self, content: str, assertions: List[str], citations: List[str]) -> Dict[str, Any]:
+    def process(self, content: str, assertions: List[str], citations: List[str], content_assertion: str = 'unsure') -> Dict[str, Any]:
         """Main processing function with enhanced rule-based logic."""
         if not assertions:
             return {
@@ -223,6 +244,10 @@ class ConfidenceComputationEngine:
         else:
             overall_confidence = base_confidence
         
+        # Apply content assertion adjustments
+        assertion_penalty = self.calculate_assertion_penalty(content_assertion, overall_confidence)
+        overall_confidence = assertion_penalty
+        
         # Determine AI generation risk
         ai_score = self.detect_ai_generation_markers(content)
         if ai_score < 0.3:
@@ -245,5 +270,7 @@ class ConfidenceComputationEngine:
             "trapdoors_triggered": list(set(trapdoors_triggered))[:3],  # Unique, limited
             "ai_generation_risk": ai_risk,
             "provenance_score": round(self.check_provenance_markers(content), 3),
+            "content_assertion": content_assertion,
+            "assertion_penalty_applied": True if content_assertion != 'original' else False,
             "status": "processed"
         }

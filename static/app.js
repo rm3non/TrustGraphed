@@ -904,3 +904,79 @@ function switchTab(tabName) {
     // Add active class to clicked button
     event.target.classList.add('active');
 }
+
+async function handleFileUpload() {
+    console.log("handleFileUpload called");
+
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        console.log("No file selected");
+        return;
+    }
+
+    console.log("File selected:", file.name, "Size:", file.size, "Type:", file.type);
+
+    // Validate file type
+    const allowedTypes = [
+        'application/pdf',
+        'text/plain',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+        showMessage('Unsupported file type. Please upload PDF, TXT, DOC, or DOCX files.', 'error');
+        return;
+    }
+
+    console.log("File successfully loaded and validated");
+
+    // Get content assertion declaration
+    const contentSource = document.getElementById('contentSource').value;
+    console.log("Content assertion declared as:", contentSource);
+
+    // Show loading state
+    showMessage('Analyzing file with declared content type...', 'info');
+    showLoading(true);
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('content_assertion', contentSource);
+
+        console.log("Sending file for evaluation:", file.name);
+        console.log("File size:", file.size, "bytes");
+        console.log("File type:", file.type);
+        console.log("Content assertion:", contentSource);
+
+        const response = await fetch('/evaluate', {
+            method: 'POST',
+            body: formData
+        });
+
+        console.log("Response status:", response.status);
+        console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Evaluation results:", result);
+
+        if (result.status === 'success') {
+            displayResults(result.trust_evaluation);
+            showMessage('Analysis complete!', 'success');
+        } else {
+            throw new Error(result.message || 'Evaluation failed');
+        }
+
+    } catch (error) {
+        console.error('Error during file upload:', error);
+        showMessage(`Error: ${error.message}`, 'error');
+    } finally {
+        showLoading(false);
+    }
+}

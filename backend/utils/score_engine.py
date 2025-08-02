@@ -166,7 +166,7 @@ class TrustScoreEngine:
                 "name": "Confidence Computation Engine (CCE)",
                 "weight": "25%",
                 "score": module_result.get("overall_confidence", 0.5),
-                "explanation": f"Analyzed language patterns and citation support. Found {module_result.get('high_confidence_count', 0)} high-confidence assertions out of total analyzed.",
+                "explanation": f"Analyzed language patterns and citation support. Found {module_result.get('high_confidence_count', 0)} high-confidence assertions out of total analyzed. User declared content as: '{module_result.get('content_assertion', 'unknown')}'.",
                 "impact": "Confident language with proper citation support increases trustworthiness significantly.",
                 "details": {
                     "high_confidence_assertions": module_result.get('high_confidence_count', 0),

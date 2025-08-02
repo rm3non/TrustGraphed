@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,7 +36,7 @@
             <h2>A Protocol That Quantifies Trust</h2>
             <p>Six specialized analysis engines operating in sequence to deliver comprehensive trust evaluation with mathematical precision.</p>
         </div>
-        
+
         <div class="pipeline-visual">
             <div class="pipeline-flow">
                 <div class="flow-step">Content</div>
@@ -110,7 +109,7 @@
             <h2>Trust Is the Next Internet Primitive</h2>
             <p class="impact-quote">"The HTTPS protocol for content authenticity"</p>
         </div>
-        
+
         <div class="use-cases-grid">
             <div class="use-case">
                 <div class="use-case-icon">🏛️</div>
@@ -194,22 +193,41 @@
                         <button type="button" id="textTab" class="tab-btn active">Text Analysis</button>
                         <button type="button" id="fileTab" class="tab-btn">Document Upload</button>
                     </div>
-                    
+
                     <div id="textInputSection" class="input-method active">
                         <textarea id="contentInput" placeholder="Enter content for comprehensive trust evaluation...
 
 Example: Research findings, news articles, policy documents, or any text requiring verification analysis."></textarea>
                     </div>
-                    
+
                     <div id="fileInputSection" class="input-method hidden">
-                        <div id="dropZone" class="file-drop-zone">
-                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                            <h4>Upload Document</h4>
-                            <p class="file-format-hint">Formats: .txt, .pdf, .docx (max 10MB)</p>
-                            <p class="click-hint">Click here or drag & drop your file</p>
-                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx" style="display: none;" />
-                        </div>
-                        
+                        <div class="upload-section">
+                <div class="content-assertion-section">
+                    <label for="contentSource" class="assertion-label">
+                        <strong>Content Declaration:</strong> This content contains:
+                    </label>
+                    <select id="contentSource" class="assertion-dropdown">
+                        <option value="original">🧠 Fully original (human-written)</option>
+                        <option value="ai">🤖 Partially AI-generated</option>
+                        <option value="copied">📝 Copied or adapted from external sources</option>
+                        <option value="mixed">🧩 Combination of sources and AI assistance</option>
+                        <option value="unsure">❓ Unsure / Don't want to declare</option>
+                    </select>
+                    <p class="assertion-note">
+                        Your declaration affects how the trust protocol evaluates this content.
+                    </p>
+                </div>
+
+                <div class="drop-zone" id="dropZone" onclick="openFileDialog()">
+                    <div class="drop-zone-content">
+                        <div class="upload-icon">📄</div>
+                        <p class="drop-text">Drop your file here or click to browse</p>
+                        <p class="supported-formats">Supported: PDF, TXT, DOC, DOCX</p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf,.txt,.doc,.docx" style="display: none;">
+            </div>
+
                         <div id="fileInfo" class="file-info hidden">
                             <span>📄 <span id="fileName">No file selected</span></span>
                             <button type="button" id="removeFile">&times;</button>
@@ -248,19 +266,19 @@ Example: Research findings, news articles, policy documents, or any text requiri
                             <p><strong>Citations:</strong> <span id="citationsCount">8</span></p>
                             <p><strong>Confidence:</strong> <span id="extractionConfidence">92</span>%</p>
                         </div>
-                        
+
                         <div class="module-card">
                             <h4>⚖️ Integrity Analysis</h4>
                             <p><strong>Integrity Score:</strong> <span id="integrityScore">88</span>%</p>
                             <p><strong>Issues Found:</strong> <span id="issuesFound">2</span></p>
                         </div>
-                        
+
                         <div class="module-card">
                             <h4>📊 Confidence Analysis</h4>
                             <p><strong>Overall Confidence:</strong> <span id="overallConfidence">85</span>%</p>
                             <p><strong>High Confidence:</strong> <span id="highConfidenceCount">9</span></p>
                         </div>
-                        
+
                         <div class="module-card">
                             <h4>🤖 Fabrication Detection</h4>
                             <p><strong>Authenticity:</strong> <span id="authenticityScore">91</span>%</p>
@@ -291,7 +309,7 @@ Example: Research findings, news articles, policy documents, or any text requiri
             <h2>We're Building a Global Standard</h2>
             <p>Building the foundational infrastructure for digital content trust and verification across the internet.</p>
         </div>
-        
+
         <div class="roadmap-timeline">
             <div class="timeline-item current">
                 <div class="timeline-icon">✅</div>
@@ -304,7 +322,7 @@ Example: Research findings, news articles, policy documents, or any text requiri
                     <li>Core engine optimization</li>
                 </ul>
             </div>
-            
+
             <div class="timeline-item upcoming">
                 <div class="timeline-icon">🔮</div>
                 <h3>Future Development</h3>
@@ -329,20 +347,20 @@ Example: Research findings, news articles, policy documents, or any text requiri
                 </div>
                 <p style="color: var(--text-secondary);">Digital Truth Infrastructure Protocol</p>
             </div>
-            
+
             <div class="footer-info">
                 <div class="footer-section">
                     <h4>Creator</h4>
                     <p>Rahul Menon</p>
                     <p>Infrastructure Protocol Architect</p>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4>Intellectual Property</h4>
                     <p>Patent: Filed, India (PCT-ready)</p>
                     <p>License: MIT</p>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4>Resources</h4>
                     <a href="https://github.com/rm3non/TrustGraphed">GitHub Repository</a>
