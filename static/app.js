@@ -414,9 +414,9 @@ class TrustGraphedApp {
 
         // Update certificate info
         const certIdEl = document.getElementById('certificateId');
-        const certStatusEl = document.getElementById('certificateStatus');
+        const readableSummaryEl = document.getElementById('readableSummary');
         if (certIdEl) certIdEl.textContent = certificate_id || 'N/A';
-        if (certStatusEl) certStatusEl.textContent = 'Valid';
+        if (readableSummaryEl) readableSummaryEl.textContent = readable_summary || 'Certificate generated successfully';
 
         // Display detailed explanation if available
         this.displayDetailedExplanation(trust_evaluation.detailed_explanation);
@@ -471,19 +471,132 @@ class TrustGraphedApp {
     }
 
      // Method to display the detailed explanation
-     displayDetailedExplanation(explanation) {
-        const explanationContainer = document.getElementById('explanationContainer');
-        if (!explanationContainer) {
-            console.warn('Explanation container not found.');
+    displayDetailedExplanation(explanation) {
+        console.log('Detailed explanation data:', explanation);
+        
+        if (!explanation || typeof explanation !== 'object') {
+            console.warn('No detailed explanation data available');
             return;
         }
 
-        if (explanation && typeof explanation === 'string') {
-            explanationContainer.textContent = explanation;
-            explanationContainer.classList.remove('hidden');
-        } else {
-            explanationContainer.textContent = 'No detailed explanation available.';
-            explanationContainer.classList.add('hidden');
+        // Show the detailed explanation section
+        const explanationSection = document.getElementById('detailedExplanationSection');
+        if (explanationSection) {
+            explanationSection.classList.remove('hidden');
+            
+            // Set up toggle functionality
+            const toggleBtn = document.getElementById('toggleDetailedReport');
+            const detailedReport = document.getElementById('detailedReport');
+            
+            if (toggleBtn && detailedReport) {
+                toggleBtn.onclick = () => {
+                    const isHidden = detailedReport.classList.contains('hidden');
+                    if (isHidden) {
+                        detailedReport.classList.remove('hidden');
+                        toggleBtn.textContent = 'Hide Detailed Analysis';
+                    } else {
+                        detailedReport.classList.add('hidden');
+                        toggleBtn.textContent = 'Show Detailed Analysis';
+                    }
+                };
+            }
+        }
+
+        // Populate overall explanation
+        const overallExpl = document.getElementById('overallExplanation');
+        if (overallExpl && explanation.overall_explanation) {
+            overallExpl.textContent = explanation.overall_explanation;
+        }
+
+        // Populate score breakdown
+        const scoreBreakdown = document.getElementById('scoreBreakdown');
+        if (scoreBreakdown && explanation.score_breakdown) {
+            let breakdownHTML = '<div class="breakdown-table">';
+            
+            Object.entries(explanation.score_breakdown).forEach(([key, value]) => {
+                if (key !== 'final_calculation' && typeof value === 'object') {
+                    breakdownHTML += `
+                        <div class="breakdown-row">
+                            <strong>${key}</strong>
+                            <span>${value.calculation || `${value.raw_score} × ${value.weight}`}</span>
+                            <span>${value.weighted_contribution || 'N/A'}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (explanation.score_breakdown.final_calculation) {
+                breakdownHTML += `
+                    <div class="breakdown-final">
+                        <strong>Final Score: ${explanation.score_breakdown.final_calculation.total_weighted_score}</strong>
+                    </div>
+                `;
+            }
+            
+            breakdownHTML += '</div>';
+            scoreBreakdown.innerHTML = breakdownHTML;
+        }
+
+        // Populate component analysis
+        const componentAnalysis = document.getElementById('componentAnalysis');
+        if (componentAnalysis && explanation.component_explanations) {
+            let componentHTML = '';
+            
+            Object.entries(explanation.component_explanations).forEach(([key, comp]) => {
+                componentHTML += `
+                    <div class="component-detail">
+                        <h6>${comp.name} (Weight: ${comp.weight || 'N/A'})</h6>
+                        <p><strong>Score:</strong> ${comp.score || 'N/A'}</p>
+                        <p><strong>Explanation:</strong> ${comp.explanation || 'N/A'}</p>
+                        <p><strong>Impact:</strong> ${comp.impact || 'N/A'}</p>
+                        ${comp.details ? `
+                            <div class="component-details-extra">
+                                ${Object.entries(comp.details).map(([k, v]) => 
+                                    k !== 'what_this_means' ? `<span><strong>${k.replace(/_/g, ' ')}:</strong> ${v}</span>` : ''
+                                ).join('')}
+                                ${comp.details.what_this_means ? `<p><em>${comp.details.what_this_means}</em></p>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            componentAnalysis.innerHTML = componentHTML;
+        }
+
+        // Populate methodology
+        const methodologyDetails = document.getElementById('methodologyDetails');
+        if (methodologyDetails && explanation.methodology_details) {
+            const methodology = explanation.methodology_details;
+            let methodHTML = `
+                <p><strong>Approach:</strong> ${methodology.approach || 'N/A'}</p>
+                <div class="methodology-components">
+                    <h6>Component Weights:</h6>
+            `;
+            
+            if (methodology.components) {
+                Object.entries(methodology.components).forEach(([key, value]) => {
+                    methodHTML += `<div class="method-component"><strong>${key}:</strong> ${value}</div>`;
+                });
+            }
+            
+            methodHTML += '</div>';
+            
+            if (methodology.score_calculation) {
+                methodHTML += `<p><strong>Calculation:</strong> ${methodology.score_calculation}</p>`;
+            }
+            
+            methodologyDetails.innerHTML = methodHTML;
+        }
+
+        // Populate recommendations
+        const recommendations = document.getElementById('recommendations');
+        if (recommendations && explanation.recommendations) {
+            let recHTML = '';
+            explanation.recommendations.forEach(rec => {
+                recHTML += `<div class="recommendation">${rec}</div>`;
+            });
+            recommendations.innerHTML = recHTML;
         }
     }
 }
