@@ -89,7 +89,7 @@ class TrustGraphedApp {
         document.body.style.overflow = 'auto';
         this.hideResults();
         this.hideError();
-        
+
         // Reset detailed explanation section attributes
         const toggleBtn = document.getElementById('toggleDetailedReport');
         if (toggleBtn) {
@@ -798,3 +798,71 @@ window.testFileUpload = function(testFile) {
     const event = new Event('submit');
     app.handleSubmit(event);
 };
+
+// TrustGraphed Frontend JavaScript
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkBackendHealth();
+    initializeEventListeners();
+});
+
+async function checkBackendHealth() {
+    try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        console.log('Backend connection successful:', data);
+    } catch (error) {
+        console.error('Backend connection failed:', error);
+    }
+}
+
+function initializeEventListeners() {
+    // File input change handler
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const fileName = this.files[0]?.name;
+            if (fileName) {
+                const label = this.nextElementSibling;
+                label.innerHTML = `<i class="fas fa-file"></i> ${fileName}`;
+            }
+        });
+    }
+}
+
+// Navigation functions
+function scrollToSection(sectionId) {
+    const element = document.getElementById(sectionId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToDemo() {
+    const element = document.getElementById('demo');
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Tab switching functionality
+function switchTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab content
+    const targetTab = document.getElementById(tabName + 'Tab');
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
