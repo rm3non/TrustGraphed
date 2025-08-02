@@ -39,12 +39,16 @@ class TrustScoreEngine:
             "Unverified": "VERY LOW"
         }
 
+        # Generate disclaimer
+        disclaimer = self._generate_disclaimer(module_results, score_data, assertion_type)
+
         return {
             'trust_score': score_data["final_score"] / 100.0,  # Normalize to 0-1
             'trust_level': trust_level_mapping.get(score_data["band"], "VERY LOW"),
             'trust_band': score_data["band"],
             'component_scores': component_scores,
             'insights': insights,
+            'disclaimer': disclaimer,
             'signal_breakdown': score_data["breakdown"],
             'assertion_type': assertion_type,
             'detailed_explanation': {
@@ -167,6 +171,57 @@ class TrustScoreEngine:
             insights.append("High trust score - content appears credible")
 
         return insights
+
+    def _generate_disclaimer(self, module_results: Dict[str, Any], score_data: Dict[str, Any], assertion_type: str) -> str:
+        """Generate disclaimer statement explaining the score calculation."""
+        final_score = score_data["final_score"]
+        citations = module_results.get('sdg_result', {}).get('citations_count', 0)
+        ai_likelihood = module_results.get('zfp_result', {}).get('authenticity_score', 1.0)
+        ai_likelihood = 1.0 - ai_likelihood
+        transparency_multiplier = score_data["breakdown"].get("transparency_multiplier", 1.0)
+        
+        # Build disclaimer based on key factors
+        factors = []
+        
+        # Citation factor
+        if citations == 0:
+            factors.append("lack of supporting citations")
+        elif citations >= 3:
+            factors.append("strong citation support")
+        else:
+            factors.append("limited citation support")
+        
+        # Transparency factor
+        if transparency_multiplier > 1.0:
+            factors.append("transparent content declaration")
+        elif transparency_multiplier < 1.0:
+            factors.append("content source transparency concerns")
+        
+        # AI alignment factor
+        if assertion_type.lower() == "original" and ai_likelihood > 0.6:
+            factors.append("potential transparency misalignment")
+        elif assertion_type.lower() in ["ai", "mixed"]:
+            factors.append("honest AI/mixed content declaration")
+        
+        # Generate score band explanation
+        if final_score >= 75:
+            score_explanation = "indicates high trustworthiness"
+        elif final_score >= 50:
+            score_explanation = "indicates moderate trustworthiness"
+        elif final_score >= 25:
+            score_explanation = "indicates low trustworthiness"
+        else:
+            score_explanation = "indicates very low trustworthiness"
+        
+        # Combine factors
+        factor_text = ", ".join(factors)
+        
+        disclaimer = f"This {final_score:.0f}/100 trust score {score_explanation} based on {factor_text}. " \
+                    f"TrustGraphed evaluates content transparency, citation quality, and declaration consistency " \
+                    f"to help readers assess information reliability. Scores reflect content characteristics, " \
+                    f"not absolute truth claims."
+        
+        return disclaimer
 
 def evaluate_content(content_text: str, assertion_type: str = "unsure"):
     """

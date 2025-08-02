@@ -1066,3 +1066,68 @@ async function handleFileUpload() {
         showLoading(false);
     }
 }
+
+function displayResults(response) {
+    // Hide loading indicator
+    showLoading(false);
+
+    // Display trust score
+    document.getElementById('trustScoreValue').innerText = (response.trust_score * 100).toFixed(2) + '%';
+    document.getElementById('trustScoreLabel').innerText = response.trust_level;
+
+    // Display component scores
+    document.getElementById('sourceDataGrapplerScore').innerText = (response.module_scores.source_data_grappler * 100).toFixed(2) + '%';
+    document.getElementById('assertionIntegrityScore').innerText = (response.module_scores.assertion_integrity * 100).toFixed(2) + '%';
+    document.getElementById('confidenceComputationScore').innerText = (response.module_scores.confidence_computation * 100).toFixed(2) + '%';
+    document.getElementById('zeroFabricationScore').innerText = (response.module_scores.zero_fabrication * 100).toFixed(2) + '%';
+
+    // Show results
+    document.getElementById('resultsContainer').classList.remove('hidden');
+    document.getElementById('trustScore').classList.remove('hidden');
+    document.getElementById('disclaimer').classList.remove('hidden');
+    document.getElementById('insights').classList.remove('hidden');
+    document.getElementById('componentScores').classList.remove('hidden');
+
+    // Display disclaimer
+    const disclaimerContainer = document.getElementById('disclaimer');
+    if (disclaimerContainer && response.disclaimer) {
+        disclaimerContainer.innerHTML = `
+            <div class="disclaimer-box">
+                <h4>📋 Score Explanation</h4>
+                <p class="disclaimer-text">${response.disclaimer}</p>
+            </div>
+        `;
+    }
+
+    // Display insights
+    const insightsContainer = document.getElementById('insights');
+    if (insightsContainer && response.insights) {
+        insightsContainer.innerHTML = `
+            <h4>🔍 Analysis Insights</h4>
+            <ul>
+                ${response.insights.map(insight => `<li>${insight}</li>`).join('')}
+            </ul>
+        `;
+    }
+
+}
+function showLoading(isLoading) {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+    }
+}
+
+function showMessage(message, type = 'info') {
+    const messageBox = document.getElementById('messageBox');
+    if (messageBox) {
+        messageBox.textContent = message;
+        messageBox.className = `message-box ${type}`;
+        messageBox.classList.remove('hidden');
+
+        // Hide the message after 5 seconds
+        setTimeout(() => {
+            messageBox.classList.add('hidden');
+        }, 5000);
+    }
+}
