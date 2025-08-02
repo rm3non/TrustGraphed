@@ -120,7 +120,11 @@ class TrustGraphedApp {
     handleDrop(e) {
         const files = e.dataTransfer.files;
         if (files.length > 0) {
+            // Clear any existing file first
+            this.clearFile();
+            // Set the file input
             this.fileInput.files = files;
+            // Handle the upload
             this.handleFileUpload({ target: { files } });
         }
     }
@@ -175,6 +179,7 @@ class TrustGraphedApp {
         this.currentFile = file;
         this.currentFileContent = 'FILE_UPLOAD'; // Flag to indicate file mode
         this.showFileInfo(file.name);
+        this.hideError(); // Clear any previous errors
         this.validateInput();
     }
 
@@ -186,11 +191,20 @@ class TrustGraphedApp {
     }
 
     clearFile() {
-        if (this.fileInput) this.fileInput.value = '';
+        if (this.fileInput) {
+            this.fileInput.value = '';
+            // Remove any event listeners temporarily to prevent double trigger
+            const newFileInput = this.fileInput.cloneNode(true);
+            this.fileInput.parentNode.replaceChild(newFileInput, this.fileInput);
+            this.fileInput = newFileInput;
+            // Re-add the event listener
+            this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+        }
         this.currentFileContent = '';
         this.currentFile = null;
         this.fileInfo?.classList.add('hidden');
         if (this.fileName) this.fileName.textContent = 'No file selected';
+        this.hideError(); // Clear any errors when clearing file
         this.validateInput();
     }
 
@@ -277,7 +291,8 @@ class TrustGraphedApp {
             
         } catch (error) {
             console.error('Evaluation failed:', error);
-            this.showError(`Evaluation failed: ${error.message}`);
+            const errorMessage = error.message || error.toString() || 'Unknown error occurred';
+            this.showError(`Evaluation failed: ${errorMessage}`);
         } finally {
             this.setLoading(false);
         }
