@@ -89,6 +89,12 @@ class TrustGraphedApp {
         document.body.style.overflow = 'auto';
         this.hideResults();
         this.hideError();
+        
+        // Reset detailed explanation section attributes
+        const toggleBtn = document.getElementById('toggleDetailedReport');
+        if (toggleBtn) {
+            toggleBtn.removeAttribute('data-initialized');
+        }
     }
 
     setupDragAndDrop() {
@@ -491,11 +497,12 @@ class TrustGraphedApp {
         if (explanationSection) {
             explanationSection.classList.remove('hidden');
 
-            // Set up toggle functionality
+            // Set up toggle functionality only once
             const toggleBtn = document.getElementById('toggleDetailedReport');
             const detailedReport = document.getElementById('detailedReport');
 
-            if (toggleBtn && detailedReport) {
+            if (toggleBtn && detailedReport && !toggleBtn.hasAttribute('data-initialized')) {
+                toggleBtn.setAttribute('data-initialized', 'true');
                 toggleBtn.onclick = () => {
                     const isHidden = detailedReport.classList.contains('hidden');
                     if (isHidden) {
@@ -507,6 +514,9 @@ class TrustGraphedApp {
                     }
                 };
             }
+        } else {
+            // Create explanation section if it doesn't exist
+            this.createDetailedExplanationSection();
         }
 
         // Populate overall explanation
@@ -605,6 +615,47 @@ class TrustGraphedApp {
             });
             recommendations.innerHTML = recHTML;
         }
+    }
+
+    createDetailedExplanationSection() {
+        const resultsSection = document.getElementById('resultsSection');
+        if (!resultsSection) return;
+
+        // Create the detailed explanation section if it doesn't exist
+        const existingSection = document.getElementById('detailedExplanationSection');
+        if (existingSection) return;
+
+        const explanationSection = document.createElement('div');
+        explanationSection.id = 'detailedExplanationSection';
+        explanationSection.className = 'detailed-explanation-section';
+        explanationSection.innerHTML = `
+            <h4>📊 Detailed Analysis Report</h4>
+            <button id="toggleDetailedReport" class="btn-secondary">Show Detailed Analysis</button>
+            <div id="detailedReport" class="detailed-report hidden">
+                <div class="explanation-card">
+                    <h5>🎯 Overall Score Explanation</h5>
+                    <div id="overallExplanation" class="explanation-content"></div>
+                </div>
+                <div class="explanation-card">
+                    <h5>⚖️ Score Breakdown</h5>
+                    <div id="scoreBreakdown" class="score-breakdown"></div>
+                </div>
+                <div class="explanation-card">
+                    <h5>🔍 Component Analysis</h5>
+                    <div id="componentAnalysis" class="component-analysis"></div>
+                </div>
+                <div class="explanation-card">
+                    <h5>📋 Methodology</h5>
+                    <div id="methodologyDetails" class="methodology-details"></div>
+                </div>
+                <div class="explanation-card">
+                    <h5>💡 Recommendations</h5>
+                    <div id="recommendations" class="recommendations"></div>
+                </div>
+            </div>
+        `;
+
+        resultsSection.appendChild(explanationSection);
     }
 
     createDetailedExplanationContainer(explanation) {

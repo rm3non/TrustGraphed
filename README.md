@@ -55,12 +55,15 @@ Content Input → [SDG] → [AIE] → [CCE] → [ZFP] → [Score Engine] → [Ce
 2. **Click Run**: The application will automatically start
 3. **Open in Browser**: Access your live application at the provided URL
 
-### Local Development
+### Quick Setup (Local Development)
 
 ```bash
 # Clone repository
 git clone https://github.com/rm3non/TrustGraphed.git
 cd TrustGraphed
+
+# Copy environment template (optional)
+cp .env.template .env
 
 # Install dependencies
 pip install -r requirements.txt
@@ -70,6 +73,15 @@ cd backend && python app.py
 ```
 
 Visit `http://0.0.0.0:5000` in your browser.
+
+### Environment Configuration
+
+Copy `.env.template` to `.env` and customize as needed:
+
+```bash
+cp .env.template .env
+# Edit .env with your preferred settings
+```
 
 ---
 
