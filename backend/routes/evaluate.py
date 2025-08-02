@@ -164,12 +164,21 @@ def evaluate_content():
                 
             except ValueError as e:
                 error_msg = str(e) if str(e) else "Unknown file processing error"
-                print(f"File processing ValueError: {error_msg}")
-                return jsonify({"error": f"File processing error: {error_msg}"}), 400
+                print(f"ValueError processing file '{uploaded_file.filename}': {error_msg}")
+                return jsonify({
+                    "error": f"File processing error: {error_msg}",
+                    "filename": uploaded_file.filename,
+                    "status": "failed"
+                }), 400
             except Exception as e:
                 error_msg = str(e) if str(e) else "Unknown unexpected error"
-                print(f"File processing Exception: {error_msg}")
-                return jsonify({"error": f"Unexpected file processing error: {error_msg}"}), 500
+                print(f"Exception processing file '{uploaded_file.filename}': {error_msg}")
+                print(f"Exception type: {type(e).__name__}")
+                return jsonify({
+                    "error": f"Unexpected file processing error: {error_msg}",
+                    "filename": uploaded_file.filename,
+                    "status": "failed"
+                }), 500
                 
         elif request.is_json:
             # Text input mode
@@ -309,12 +318,29 @@ def test_file_processing():
             
         except ValueError as e:
             error_msg = str(e) if str(e) else "Unknown ValueError"
-            print(f"ValueError in test: {error_msg}")
-            return jsonify({"error": error_msg}), 400
+            print(f"ValueError in test endpoint: {error_msg}")
+            print(f"File details - Name: {uploaded_file.filename}, Size: {len(uploaded_file.read()) if uploaded_file else 'N/A'}")
+            uploaded_file.seek(0) if uploaded_file else None
+            return jsonify({
+                "error": error_msg,
+                "filename": uploaded_file.filename,
+                "debug_info": {
+                    "error_type": "ValueError",
+                    "file_size": len(uploaded_file.read()) if uploaded_file else 0
+                }
+            }), 400
         except Exception as e:
             error_msg = str(e) if str(e) else "Unknown Exception"
-            print(f"Exception in test: {error_msg}")
-            return jsonify({"error": error_msg}), 500
+            print(f"Exception in test endpoint: {error_msg}")
+            print(f"Exception type: {type(e).__name__}")
+            return jsonify({
+                "error": error_msg,
+                "filename": uploaded_file.filename if uploaded_file else "unknown",
+                "debug_info": {
+                    "error_type": type(e).__name__,
+                    "file_size": len(uploaded_file.read()) if uploaded_file else 0
+                }
+            }), 500
             
     except Exception as e:
         error_msg = str(e) if str(e) else "Unknown test failure"

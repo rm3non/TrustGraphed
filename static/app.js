@@ -192,12 +192,6 @@ class TrustGraphedApp {
     clearFile() {
         if (this.fileInput) {
             this.fileInput.value = '';
-            // Remove any event listeners temporarily to prevent double trigger
-            const newFileInput = this.fileInput.cloneNode(true);
-            this.fileInput.parentNode.replaceChild(newFileInput, this.fileInput);
-            this.fileInput = newFileInput;
-            // Re-add the event listener
-            this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
         }
         this.currentFileContent = '';
         this.currentFile = null;
@@ -279,15 +273,27 @@ class TrustGraphedApp {
             }
 
             console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers));
 
             if (!response.ok) {
-                let errorMessage;
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                 try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-                } catch (parseError) {
-                    // If we can't parse the response as JSON, use the status text
-                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    const responseText = await response.text();
+                    console.log('Error response text:', responseText);
+                    
+                    if (responseText) {
+                        try {
+                            const errorData = JSON.parse(responseText);
+                            errorMessage = errorData.error || errorData.message || errorMessage;
+                        } catch (jsonError) {
+                            // If not JSON, use the raw text if it's meaningful
+                            if (responseText.length > 0 && responseText.length < 500) {
+                                errorMessage = responseText;
+                            }
+                        }
+                    }
+                } catch (textError) {
+                    console.error('Failed to read error response:', textError);
                 }
                 throw new Error(errorMessage);
             }
@@ -299,14 +305,32 @@ class TrustGraphedApp {
 
         } catch (error) {
             console.error('Evaluation failed:', error);
-            let errorMessage = 'Unknown error occurred';
+            console.error('Error type:', typeof error);
+            console.error('Error constructor:', error?.constructor?.name);
             
-            if (error instanceof Error) {
+            let errorMessage = 'Unknown error occurred during evaluation';
+            
+            if (error instanceof Error && error.message) {
                 errorMessage = error.message;
-            } else if (typeof error === 'string') {
+            } else if (typeof error === 'string' && error.trim()) {
                 errorMessage = error;
             } else if (error && typeof error === 'object') {
-                errorMessage = error.message || error.error || JSON.stringify(error);
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.error) {
+                    errorMessage = error.error;
+                } else {
+                    // Try to extract meaningful info from the error object
+                    const errorKeys = Object.keys(error);
+                    if (errorKeys.length > 0) {
+                        errorMessage = `Error object: ${JSON.stringify(error)}`;
+                    }
+                }
+            }
+            
+            // Ensure we have a meaningful error message
+            if (!errorMessage || errorMessage === 'Unknown error occurred during evaluation') {
+                errorMessage = 'File processing failed. Please try again or use a different file.';
             }
             
             this.showError(`Evaluation failed: ${errorMessage}`);
@@ -419,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new TrustGraphedApp();
 });
 
-// Debug helper
+// Debug helpers
 window.testEvaluate = async function(content = "This is a test content with some claims that need verification.") {
     try {
         const response = await fetch('/evaluate', {
@@ -434,4 +458,105 @@ window.testEvaluate = async function(content = "This is a test content with some
         console.error('Test failed:', error);
         return error;
     }
+};
+
+// UAT Test Suite
+window.runUATTests = async function() {
+    console.log('🧪 Starting UAT Test Suite for TrustGraphed');
+    
+    const results = {
+        passed: 0,
+        failed: 0,
+        tests: []
+    };
+    
+    // Test 1: Text Input Submission
+    try {
+        console.log('Test 1: Text input submission...');
+        const textResult = await window.testEvaluate("This is a test document with multiple claims that need verification. The system should analyze this content thoroughly and provide a comprehensive trust score based on assertion integrity, fabrication detection, and confidence analysis.");
+        if (textResult.status === 'success') {
+            results.passed++;
+            results.tests.push({ name: 'Text Input', status: 'PASS', data: textResult });
+            console.log('✅ Test 1 PASSED');
+        } else {
+            throw new Error('Invalid response format');
+        }
+    } catch (error) {
+        results.failed++;
+        results.tests.push({ name: 'Text Input', status: 'FAIL', error: error.message });
+        console.log('❌ Test 1 FAILED:', error.message);
+    }
+    
+    // Test 2: Backend Health Check
+    try {
+        console.log('Test 2: Backend health check...');
+        const healthResponse = await fetch('/health');
+        const healthData = await healthResponse.json();
+        if (healthResponse.ok && healthData.status) {
+            results.passed++;
+            results.tests.push({ name: 'Backend Health', status: 'PASS', data: healthData });
+            console.log('✅ Test 2 PASSED');
+        } else {
+            throw new Error('Health check failed');
+        }
+    } catch (error) {
+        results.failed++;
+        results.tests.push({ name: 'Backend Health', status: 'FAIL', error: error.message });
+        console.log('❌ Test 2 FAILED:', error.message);
+    }
+    
+    // Test 3: File Processing Test Endpoint
+    try {
+        console.log('Test 3: File processing test endpoint...');
+        const testFileResponse = await fetch('/evaluate/test-file', {
+            method: 'POST',
+            body: new FormData() // Empty form data to test error handling
+        });
+        
+        // This should return an error, but it should be a properly formatted error
+        if (!testFileResponse.ok) {
+            const errorData = await testFileResponse.json();
+            if (errorData.error) {
+                results.passed++;
+                results.tests.push({ name: 'File Error Handling', status: 'PASS', data: errorData });
+                console.log('✅ Test 3 PASSED - Error handling works correctly');
+            } else {
+                throw new Error('Error response format is incorrect');
+            }
+        }
+    } catch (error) {
+        results.failed++;
+        results.tests.push({ name: 'File Error Handling', status: 'FAIL', error: error.message });
+        console.log('❌ Test 3 FAILED:', error.message);
+    }
+    
+    console.log(`🏁 UAT Results: ${results.passed} passed, ${results.failed} failed`);
+    console.table(results.tests);
+    
+    return results;
+};
+
+// File upload simulation test
+window.testFileUpload = function(testFile) {
+    console.log('🔍 Testing file upload with:', testFile?.name || 'no file');
+    
+    if (!testFile) {
+        console.log('❌ No file provided for testing');
+        return;
+    }
+    
+    const app = new TrustGraphedApp();
+    app.currentFile = testFile;
+    app.currentInputMethod = 'file';
+    
+    console.log('File details:', {
+        name: testFile.name,
+        size: testFile.size,
+        type: testFile.type,
+        lastModified: new Date(testFile.lastModified)
+    });
+    
+    // Simulate the form submission
+    const event = new Event('submit');
+    app.handleSubmit(event);
 };
