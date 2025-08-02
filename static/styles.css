@@ -602,6 +602,8 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     background: var(--bg-secondary);
+    position: relative;
+    overflow: hidden);
 }
 
 .file-drop-zone:hover,
@@ -621,6 +623,13 @@ body {
     color: var(--text-muted);
     font-size: 0.875rem;
     margin-top: 0.5rem;
+}
+
+.click-hint {
+    color: var(--accent-blue);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 0.75rem;
 }
 
 .file-info {

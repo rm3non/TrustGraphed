@@ -118,12 +118,20 @@ class TrustGraphedApp {
         // Handle file drop
         dropZone.addEventListener('drop', (e) => this.handleDrop(e), false);
 
-        // Handle click to open file dialog - single event listener
+        // Handle click to open file dialog with proper event handling
         dropZone.addEventListener('click', (e) => {
-            e.preventDefault();
+            // Don't prevent default here as it interferes with file input
             e.stopPropagation();
+            console.log('Drop zone clicked, opening file dialog...');
             this.openFileDialog();
-        }, false);
+        });
+
+        // Also add click handler to the file input itself as backup
+        if (this.fileInput) {
+            this.fileInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
     }
 
     preventDefaults(e) {
@@ -132,8 +140,14 @@ class TrustGraphedApp {
     }
 
     openFileDialog() {
+        console.log('openFileDialog called');
         if (this.fileInput) {
+            console.log('File input found, triggering click...');
+            // Reset the input first to allow selecting the same file again
+            this.fileInput.value = '';
             this.fileInput.click();
+        } else {
+            console.error('File input element not found');
         }
     }
 

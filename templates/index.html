@@ -206,7 +206,8 @@ Example: Research findings, news articles, policy documents, or any text requiri
                             <i class="fas fa-cloud-upload-alt upload-icon"></i>
                             <h4>Upload Document</h4>
                             <p class="file-format-hint">Formats: .txt, .pdf, .docx (max 10MB)</p>
-                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx" style="display: none;" />
+                            <p class="click-hint">Click here or drag & drop your file</p>
+                            <input type="file" id="fileInput" accept=".txt,.pdf,.docx" style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer;" />
                         </div>
                         
                         <div id="fileInfo" class="file-info hidden">
