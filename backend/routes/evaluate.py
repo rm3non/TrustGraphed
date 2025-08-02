@@ -9,8 +9,14 @@ import os
 import tempfile
 import fitz  # PyMuPDF
 import docx
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Add the backend directory to the Python path
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+backend_parent = os.path.dirname(backend_dir)
+if backend_parent not in sys.path:
+    sys.path.insert(0, backend_parent)
+
+# Import utils modules
 from utils.sdg import SourceDataGrappler
 from utils.aie import AssertionIntegrityEngine
 from utils.cce import ConfidenceComputationEngine
@@ -22,7 +28,11 @@ evaluate_bp = Blueprint('evaluate', __name__)
 
 def extract_text_from_file(file):
     """Extract text content from uploaded file with comprehensive error handling."""
-    filename = file.filename.lower()
+    filename = file.filename.lower() if file.filename else ""
+    print(f"Processing file: {filename}")
+    
+    if not filename:
+        raise ValueError("No filename provided")
     
     try:
         if filename.endswith(('.txt', '.md')):
@@ -153,9 +163,13 @@ def evaluate_content():
                 print(f"Successfully extracted {len(content)} characters from {uploaded_file.filename}")
                 
             except ValueError as e:
-                return jsonify({"error": f"File processing error: {str(e)}"}), 400
+                error_msg = str(e) if str(e) else "Unknown file processing error"
+                print(f"File processing ValueError: {error_msg}")
+                return jsonify({"error": f"File processing error: {error_msg}"}), 400
             except Exception as e:
-                return jsonify({"error": f"Unexpected file processing error: {str(e)}"}), 500
+                error_msg = str(e) if str(e) else "Unknown unexpected error"
+                print(f"File processing Exception: {error_msg}")
+                return jsonify({"error": f"Unexpected file processing error: {error_msg}"}), 500
                 
         elif request.is_json:
             # Text input mode
@@ -269,12 +283,16 @@ def evaluate_health():
 def test_file_processing():
     """Test endpoint for file processing without full evaluation."""
     try:
+        print("Test file processing endpoint called")
+        print(f"Request files: {list(request.files.keys())}")
+        
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
             
         uploaded_file = request.files['file']
+        print(f"Uploaded file: {uploaded_file.filename}")
         
-        if uploaded_file.filename == '':
+        if not uploaded_file.filename or uploaded_file.filename == '':
             return jsonify({"error": "No file selected"}), 400
         
         # Extract text from file
@@ -290,7 +308,15 @@ def test_file_processing():
             }), 200
             
         except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+            error_msg = str(e) if str(e) else "Unknown ValueError"
+            print(f"ValueError in test: {error_msg}")
+            return jsonify({"error": error_msg}), 400
+        except Exception as e:
+            error_msg = str(e) if str(e) else "Unknown Exception"
+            print(f"Exception in test: {error_msg}")
+            return jsonify({"error": error_msg}), 500
             
     except Exception as e:
-        return jsonify({"error": f"Test failed: {str(e)}"}), 500
+        error_msg = str(e) if str(e) else "Unknown test failure"
+        print(f"Test endpoint exception: {error_msg}")
+        return jsonify({"error": f"Test failed: {error_msg}"}), 500
