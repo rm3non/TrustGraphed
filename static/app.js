@@ -419,7 +419,14 @@ class TrustGraphedApp {
         if (readableSummaryEl) readableSummaryEl.textContent = readable_summary || 'Certificate generated successfully';
 
         // Display detailed explanation if available
-        this.displayDetailedExplanation(trust_evaluation.detailed_explanation);
+        if (data.trust_evaluation && data.trust_evaluation.detailed_explanation) {
+            const explanationContainer = document.getElementById('detailedExplanation');
+            if (explanationContainer) {
+                this.displayDetailedExplanation(data.trust_evaluation.detailed_explanation);
+            } else {
+                console.warn('Detailed explanation container not found in DOM');
+            }
+        }
 
         // Color-code trust score
         const scoreElement = trustScoreEl?.parentElement;
@@ -473,7 +480,7 @@ class TrustGraphedApp {
      // Method to display the detailed explanation
     displayDetailedExplanation(explanation) {
         console.log('Detailed explanation data:', explanation);
-        
+
         if (!explanation || typeof explanation !== 'object') {
             console.warn('No detailed explanation data available');
             return;
@@ -483,11 +490,11 @@ class TrustGraphedApp {
         const explanationSection = document.getElementById('detailedExplanationSection');
         if (explanationSection) {
             explanationSection.classList.remove('hidden');
-            
+
             // Set up toggle functionality
             const toggleBtn = document.getElementById('toggleDetailedReport');
             const detailedReport = document.getElementById('detailedReport');
-            
+
             if (toggleBtn && detailedReport) {
                 toggleBtn.onclick = () => {
                     const isHidden = detailedReport.classList.contains('hidden');
@@ -512,7 +519,7 @@ class TrustGraphedApp {
         const scoreBreakdown = document.getElementById('scoreBreakdown');
         if (scoreBreakdown && explanation.score_breakdown) {
             let breakdownHTML = '<div class="breakdown-table">';
-            
+
             Object.entries(explanation.score_breakdown).forEach(([key, value]) => {
                 if (key !== 'final_calculation' && typeof value === 'object') {
                     breakdownHTML += `
@@ -524,7 +531,7 @@ class TrustGraphedApp {
                     `;
                 }
             });
-            
+
             if (explanation.score_breakdown.final_calculation) {
                 breakdownHTML += `
                     <div class="breakdown-final">
@@ -532,7 +539,7 @@ class TrustGraphedApp {
                     </div>
                 `;
             }
-            
+
             breakdownHTML += '</div>';
             scoreBreakdown.innerHTML = breakdownHTML;
         }
@@ -541,7 +548,7 @@ class TrustGraphedApp {
         const componentAnalysis = document.getElementById('componentAnalysis');
         if (componentAnalysis && explanation.component_explanations) {
             let componentHTML = '';
-            
+
             Object.entries(explanation.component_explanations).forEach(([key, comp]) => {
                 componentHTML += `
                     <div class="component-detail">
@@ -560,7 +567,7 @@ class TrustGraphedApp {
                     </div>
                 `;
             });
-            
+
             componentAnalysis.innerHTML = componentHTML;
         }
 
@@ -573,19 +580,19 @@ class TrustGraphedApp {
                 <div class="methodology-components">
                     <h6>Component Weights:</h6>
             `;
-            
+
             if (methodology.components) {
                 Object.entries(methodology.components).forEach(([key, value]) => {
                     methodHTML += `<div class="method-component"><strong>${key}:</strong> ${value}</div>`;
                 });
             }
-            
+
             methodHTML += '</div>';
-            
+
             if (methodology.score_calculation) {
                 methodHTML += `<p><strong>Calculation:</strong> ${methodology.score_calculation}</p>`;
             }
-            
+
             methodologyDetails.innerHTML = methodHTML;
         }
 
