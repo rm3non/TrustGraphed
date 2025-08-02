@@ -36,14 +36,56 @@ body {
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    font-size: 18px;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 20px;
     color: #6b46c1;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    letter-spacing: -0.5px;
 }
 
 .brand-icon {
-    font-size: 20px;
+    position: relative;
+    font-size: 24px;
+    background: linear-gradient(135deg, #6b46c1, #9333ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brand-icon::after {
+    content: "✓";
+    position: absolute;
+    top: -2px;
+    right: -8px;
+    font-size: 12px;
+    color: #10b981;
+    background: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.brand-text {
+    background: linear-gradient(135deg, #1f2937, #4b5563);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+}
+
+.brand-text::after {
+    content: "™";
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    font-size: 10px;
+    color: #6b7280;
+    font-weight: 400;
 }
 
 .nav-links {
@@ -358,8 +400,45 @@ body {
 }
 
 .footer-brand .brand-text {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    letter-spacing: -0.5px;
+    color: white;
+    position: relative;
+}
+
+.footer-brand .brand-text::after {
+    content: "™";
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    font-size: 10px;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.footer-brand .brand-icon {
+    position: relative;
+    font-size: 24px;
+    color: #9333ea;
+}
+
+.footer-brand .brand-icon::after {
+    content: "✓";
+    position: absolute;
+    top: -2px;
+    right: -8px;
+    font-size: 12px;
+    color: #10b981;
+    background: #1f2937;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .footer-brand p {
