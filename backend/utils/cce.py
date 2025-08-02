@@ -163,14 +163,12 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
     """
 
     # ---------- Base Score from Content Signals ----------
-    base_score = 100
+    base_score = 50  # Start with baseline score for having content
 
     # --- Citation Weight (Max 40 Points) ---
     if signals.get("citations", 0) > 0:
         citation_score = min(signals["citations"] * 8, 40)
-    else:
-        citation_score = 0
-    base_score = citation_score
+        base_score += citation_score
 
     # --- Author/Metadata Bonus (Max +10) ---
     if signals.get("author_detected", False):
@@ -188,6 +186,45 @@ def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> d
     if signals.get("citations", 0) == 0 and not signals.get("author_detected", False):
         # No provenance = score floor
         base_score = min(base_score, 25)
+
+    # ---------- Assertion Type Penalties ----------
+    assertion_penalties = {
+        "original": 1.0,    # No penalty for original content
+        "ai": 0.85,         # 15% penalty for AI-generated
+        "copied": 0.70,     # 30% penalty for copied content
+        "mixed": 0.80,      # 20% penalty for mixed sources
+        "unsure": 0.75      # 25% penalty for undeclared
+    }
+    
+    penalty_multiplier = assertion_penalties.get(assertion_type.lower(), 0.75)
+    final_score = max(0, min(100, base_score * penalty_multiplier))
+
+    # ---------- Score Banding ----------
+    if final_score >= 75:
+        band = "High Trust"
+    elif final_score >= 50:
+        band = "Verified"
+    elif final_score >= 25:
+        band = "Low Trust"
+    else:
+        band = "Unverified"
+
+    # ---------- Breakdown for Transparency ----------
+    breakdown = {
+        "base_signals_score": base_score,
+        "citations_contribution": citation_score if signals.get("citations", 0) > 0 else 0,
+        "author_bonus": 10 if signals.get("author_detected", False) else 0,
+        "contradiction_penalty": contradiction_penalty,
+        "ai_likelihood_penalty": ai_penalty,
+        "assertion_type_multiplier": penalty_multiplier,
+        "final_score": final_score
+    }
+
+    return {
+        "final_score": final_score,
+        "band": band,
+        "breakdown": breakdown
+    }
 
     # ---------- Assertion Type Adjustment ----------
     base_score = apply_assertion_penalty(base_score, assertion_type)
