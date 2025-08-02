@@ -1,0 +1,154 @@
+Here’s a **clean, protocol-aligned scoring logic** you can directly drop into your Replit backend.
+This logic integrates:
+
+* **Assertion type penalties** (based on dropdown selection)
+* **Signal weighting** (citations, contradictions, metadata)
+* **Trapdoor logic** (Zero-Fabrication principle)
+* **Score banding** (Unverified, Low Trust, Verified, High Trust)
+
+---
+
+## **`backend/utils/cce.py`**
+
+```python
+def compute_confidence_score(signals: dict, assertion_type: str = "unsure") -> dict:
+    """
+    Compute a TrustScore based on extracted signals and user-declared assertion type.
+    
+    Parameters:
+        signals (dict): A dictionary of extracted content signals:
+            - assertions: int
+            - citations: int
+            - contradictions: int
+            - author_detected: bool
+            - ai_likelihood: float (0-1)
+        assertion_type (str): User declaration - original, ai, copied, mixed, unsure.
+    
+    Returns:
+        dict: { final_score, breakdown, band }
+    """
+
+    # ---------- Base Score from Content Signals ----------
+    base_score = 100
+
+    # --- Citation Weight (Max 40 Points) ---
+    if signals.get("citations", 0) > 0:
+        citation_score = min(signals["citations"] * 8, 40)
+    else:
+        citation_score = 0
+    base_score = citation_score
+
+    # --- Author/Metadata Bonus (Max +10) ---
+    if signals.get("author_detected", False):
+        base_score += 10
+
+    # --- Contradiction Penalty (Max -30) ---
+    contradiction_penalty = min(signals.get("contradictions", 0) * 10, 30)
+    base_score -= contradiction_penalty
+
+    # --- AI Likelihood Penalty (Max -20) ---
+    ai_penalty = int(signals.get("ai_likelihood", 0) * 20)
+    base_score -= ai_penalty
+
+    # ---------- Trapdoor Logic (Zero-Fabrication) ----------
+    if signals.get("citations", 0) == 0 and not signals.get("author_detected", False):
+        # No provenance = score floor
+        base_score = min(base_score, 25)
+
+    # ---------- Assertion Type Adjustment ----------
+    base_score = apply_assertion_penalty(base_score, assertion_type)
+
+    # Clamp final score between 0 and 100
+    final_score = max(0, min(100, round(base_score, 2)))
+
+    # ---------- Determine Score Band ----------
+    if final_score >= 75:
+        band = "High Trust"
+    elif final_score >= 50:
+        band = "Verified"
+    elif final_score >= 25:
+        band = "Low Trust"
+    else:
+        band = "Unverified"
+
+    # ---------- Return Detailed Breakdown ----------
+    return {
+        "final_score": final_score,
+        "band": band,
+        "breakdown": {
+            "citations_score": citation_score,
+            "contradiction_penalty": contradiction_penalty,
+            "ai_penalty": ai_penalty,
+            "assertion_type": assertion_type
+        }
+    }
+
+
+def apply_assertion_penalty(score: float, assertion_type: str) -> float:
+    """
+    Adjust score based on user-declared assertion type.
+    """
+    penalties = {
+        "original": 1.0,
+        "ai": 0.85,
+        "copied": 0.7,
+        "mixed": 0.8,
+        "unsure": 0.6
+    }
+    return score * penalties.get(assertion_type.lower(), 0.7)
+```
+
+---
+
+## **`backend/utils/score_engine.py`**
+
+Integrate the breakdown from `compute_confidence_score`:
+
+```python
+from backend.utils.cce import compute_confidence_score
+
+def evaluate_content(content_text: str, assertion_type: str = "unsure"):
+    """
+    Full evaluation pipeline for TrustGraphed.
+    """
+    signals = extract_signals(content_text)  # Function you already have
+    score_data = compute_confidence_score(signals, assertion_type)
+
+    return {
+        "trust_score": score_data["final_score"],
+        "trust_band": score_data["band"],
+        "signal_breakdown": score_data["breakdown"],
+        "assertion_type": assertion_type
+    }
+```
+
+---
+
+## **Front-end Example Adjustment**
+
+In your JS (`static/app.js`):
+
+```javascript
+const assertionType = document.getElementById('content_source').value;
+formData.append('assertion_type', assertionType);
+```
+
+---
+
+## **Why This Works**
+
+* **Dynamic scoring**: Adjusts based on content signals **and** user declaration.
+* **Transparent breakdown**: Shows *why* a score is low/high (citations, AI penalty, etc.).
+* **Zero-Fabrication enforcement**: No author + no citations = max 25 score.
+* **Fair penalties**: Honest AI/copy declarations get lighter penalties than “unsure.”
+
+---
+
+### **Next Step**
+
+Would you like me to **write a ready-made test suite (`test_suite.py`)** that tests:
+
+* 100% AI-generated content
+* Human + citations
+* Copied content with no references
+  …to verify this scoring logic in Replit?
