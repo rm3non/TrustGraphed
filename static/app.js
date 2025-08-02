@@ -120,18 +120,14 @@ class TrustGraphedApp {
 
         // Handle click to open file dialog with proper event handling
         dropZone.addEventListener('click', (e) => {
-            // Don't prevent default here as it interferes with file input
-            e.stopPropagation();
-            console.log('Drop zone clicked, opening file dialog...');
-            this.openFileDialog();
-        });
-
-        // Also add click handler to the file input itself as backup
-        if (this.fileInput) {
-            this.fileInput.addEventListener('click', (e) => {
+            // Only open file dialog if clicking directly on the drop zone, not on child elements
+            if (e.target === dropZone || e.target.closest('.upload-icon, h4, .file-format-hint, .click-hint')) {
+                e.preventDefault();
                 e.stopPropagation();
-            });
-        }
+                console.log('Drop zone clicked, opening file dialog...');
+                this.openFileDialog();
+            }
+        });
     }
 
     preventDefaults(e) {
