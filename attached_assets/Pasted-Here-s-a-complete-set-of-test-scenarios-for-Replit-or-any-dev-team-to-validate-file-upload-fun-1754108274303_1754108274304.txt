@@ -1,0 +1,107 @@
+Here’s a complete set of **test scenarios** for Replit (or any dev team) to validate file upload functionality in **TrustGraphed**, ensuring correct behavior across file types, edge cases, and backend integration.
+
+---
+
+### ✅ **Functional Test Scenarios**
+
+#### 1. **Text Input Submission**
+
+* **Test:** Submit a 100-word plain text string via textarea.
+* **Expected Result:** Trust evaluation succeeds; all 6 modules return outputs; certificate is shown.
+
+#### 2. **Upload Valid `.txt` File**
+
+* **Test:** Upload a `.txt` file containing valid text content.
+* **Expected Result:** File is parsed; content is processed through all modules; evaluation and certificate are returned.
+
+#### 3. **Upload Valid `.pdf` File**
+
+* **Test:** Upload a clean, single-column `.pdf` with at least 150 words.
+* **Expected Result:** `PyMuPDF` parses PDF; content is processed and results are displayed correctly.
+
+#### 4. **Upload Valid `.docx` File**
+
+* **Test:** Upload a `.docx` file with formatted paragraphs, headings, and text.
+* **Expected Result:** `python-docx` parses file, no formatting errors; trust analysis runs as expected.
+
+---
+
+### ❌ **Negative Test Scenarios**
+
+#### 5. **Upload Non-Supported File Type**
+
+* **Test:** Upload `.xlsx` or `.jpg`.
+* **Expected Result:** Frontend displays error: “Unsupported file type. Only .txt, .pdf, .docx are allowed.”
+
+#### 6. **Upload Empty `.txt` / `.pdf` / `.docx` File**
+
+* **Test:** Upload files with 0 bytes or only whitespace.
+* **Expected Result:** Error: “Uploaded file is empty or invalid for trust evaluation.”
+
+#### 7. **Upload Corrupted or Malformed File**
+
+* **Test:** Upload a broken `.pdf` or `.docx` (e.g., renamed binary).
+* **Expected Result:** Backend throws a handled exception; frontend shows: “Could not parse file. Try saving it again or upload a different version.”
+
+#### 8. **File Exceeding Size Limit (e.g. >10MB)**
+
+* **Test:** Upload a `.docx` or `.pdf` larger than 10MB.
+* **Expected Result:** Upload is blocked with: “File exceeds 10MB limit.”
+
+---
+
+### 🔄 **Regression Scenarios**
+
+#### 9. **Submit Text Input After Upload Test**
+
+* **Test:** After uploading a file, switch back to text input and submit.
+* **Expected Result:** System still handles text input normally, without crashing or retaining file state.
+
+#### 10. **Rapid Multiple Uploads**
+
+* **Test:** Upload 3 different supported files in succession without refreshing.
+* **Expected Result:** All 3 are processed independently without mixing results or cache bleed.
+
+#### 11. **Submit Without Choosing File**
+
+* **Test:** Click "Analyze Content" without selecting a file.
+* **Expected Result:** Frontend disables button or shows: “Please upload a file before submitting.”
+
+---
+
+### ⚙️ **Backend Unit-Level Scenarios**
+
+(For devs to test locally or through Pytest)
+
+#### 12. **Test PDF Parser Module**
+
+* Input: Valid PDF
+* Output: Extracted string content
+
+#### 13. **Test DOCX Parser Module**
+
+* Input: Formatted `.docx` file
+* Output: Plain text string from all paragraphs
+
+#### 14. **Test Exception Handling**
+
+* Input: Malformed `.pdf` or `.docx`
+* Output: Exception is caught; error is logged; user-friendly message returned
+
+---
+
+### 🧪 Suggested Files to Include in `/test_data/` for Replit
+
+| File Name        | Type  | Description                 |
+| ---------------- | ----- | --------------------------- |
+| `sample.txt`     | .txt  | 100-word content            |
+| `sample.pdf`     | .pdf  | Normal, clean article       |
+| `sample.docx`    | .docx | Rich text format            |
+| `corrupted.docx` | .docx | Binary file renamed to docx |
+| `empty.pdf`      | .pdf  | Blank file                  |
+| `large.pdf`      | .pdf  | >10MB dummy PDF             |
+| `image.jpg`      | .jpg  | Invalid type                |
+
+---
+
+Would you like me to write a test README section or auto-generate test files too?
