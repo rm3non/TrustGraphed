@@ -1,4 +1,3 @@
-
 class TrustGraphedApp {
     constructor() {
         this.modal = document.getElementById('evaluationModal');
@@ -10,14 +9,14 @@ class TrustGraphedApp {
         this.loadingSpinner = document.getElementById('loadingSpinner');
         this.resultsSection = document.getElementById('resultsSection');
         this.errorSection = document.getElementById('errorSection');
-        
+
         // Modal controls
         this.startEvaluationBtn = document.getElementById('startEvaluationBtn');
         this.heroStartBtn = document.getElementById('heroStartBtn');
         this.uploadPasteBtn = document.getElementById('uploadPasteBtn');
         this.ctaStartBtn = document.getElementById('ctaStartBtn');
         this.closeModal = document.getElementById('closeModal');
-        
+
         // File upload elements
         this.textTab = document.getElementById('textTab');
         this.fileTab = document.getElementById('fileTab');
@@ -26,11 +25,11 @@ class TrustGraphedApp {
         this.fileInfo = document.getElementById('fileInfo');
         this.fileName = document.getElementById('fileName');
         this.removeFileBtn = document.getElementById('removeFile');
-        
+
         this.currentInputMethod = 'text';
         this.currentFileContent = '';
         this.currentFile = null;
-        
+
         this.init();
     }
 
@@ -41,28 +40,28 @@ class TrustGraphedApp {
         this.uploadPasteBtn?.addEventListener('click', () => this.openModal('file'));
         this.ctaStartBtn?.addEventListener('click', () => this.openModal());
         this.closeModal?.addEventListener('click', () => this.closeModalHandler());
-        
+
         // Modal overlay click to close
         this.modal?.addEventListener('click', (e) => {
             if (e.target === this.modal) this.closeModalHandler();
         });
-        
+
         // Form handling
         this.form?.addEventListener('submit', (e) => this.handleSubmit(e));
         this.contentInput?.addEventListener('input', () => this.validateInput());
         this.fileInput?.addEventListener('change', (e) => this.handleFileUpload(e));
         this.removeFileBtn?.addEventListener('click', () => this.clearFile());
-        
+
         // Tab switching
         this.textTab?.addEventListener('click', () => this.switchTab('text'));
         this.fileTab?.addEventListener('click', () => this.switchTab('file'));
-        
+
         // Drag and drop
         this.setupDragAndDrop();
-        
+
         // Test backend connection on load
         this.testConnection();
-        
+
         // Initial validation
         this.validateInput();
     }
@@ -70,13 +69,13 @@ class TrustGraphedApp {
     openModal(defaultTab = 'text') {
         this.modal?.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-        
+
         if (defaultTab === 'file') {
             this.switchTab('file');
         } else {
             this.switchTab('text');
         }
-        
+
         // Focus appropriate input
         setTimeout(() => {
             if (defaultTab === 'text') {
@@ -95,7 +94,7 @@ class TrustGraphedApp {
     setupDragAndDrop() {
         const dropZone = document.querySelector('.file-drop-zone');
         if (!dropZone) return;
-        
+
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, this.preventDefaults, false);
         });
@@ -131,23 +130,23 @@ class TrustGraphedApp {
 
     switchTab(method) {
         this.currentInputMethod = method;
-        
+
         // Update tab styles
         this.textTab?.classList.toggle('active', method === 'text');
         this.fileTab?.classList.toggle('active', method === 'file');
-        
+
         // Show/hide input sections
         this.textInputSection?.classList.toggle('active', method === 'text');
         this.textInputSection?.classList.toggle('hidden', method !== 'text');
         this.fileInputSection?.classList.toggle('hidden', method !== 'file');
-        
+
         // Clear other method when switching
         if (method === 'text') {
             this.clearFile();
         } else {
             if (this.contentInput) this.contentInput.value = '';
         }
-        
+
         this.validateInput();
     }
 
@@ -168,7 +167,7 @@ class TrustGraphedApp {
         // Validate file type
         const allowedTypes = ['.txt', '.pdf', '.docx'];
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        
+
         if (!allowedTypes.includes(fileExtension)) {
             this.showError('Unsupported file type. Please upload .txt, .pdf, or .docx files only.');
             this.clearFile();
@@ -183,7 +182,7 @@ class TrustGraphedApp {
         this.validateInput();
     }
 
-    
+
 
     showFileInfo(filename) {
         if (this.fileName) this.fileName.textContent = filename;
@@ -210,14 +209,14 @@ class TrustGraphedApp {
 
     validateInput() {
         let hasValidInput = false;
-        
+
         if (this.currentInputMethod === 'text') {
             const textContent = this.contentInput?.value.trim() || '';
             hasValidInput = textContent.length >= 10;
         } else {
             hasValidInput = this.currentFile && this.currentFile.size > 0;
         }
-        
+
         if (this.analyzeBtn) this.analyzeBtn.disabled = !hasValidInput;
     }
 
@@ -233,24 +232,24 @@ class TrustGraphedApp {
 
     async handleSubmit(e) {
         e.preventDefault();
-        
+
         this.setLoading(true);
         this.hideError();
         this.hideResults();
 
         try {
             let response;
-            
+
             if (this.currentInputMethod === 'text') {
                 const content = this.contentInput?.value.trim() || '';
-                
+
                 if (!content || content.length < 10) {
                     this.showError('Please provide at least 10 characters of content to analyze.');
                     return;
                 }
-                
+
                 console.log('Sending text content for evaluation:', content.substring(0, 100) + '...');
-                
+
                 response = await fetch('/evaluate', {
                     method: 'POST',
                     headers: {
@@ -258,19 +257,19 @@ class TrustGraphedApp {
                     },
                     body: JSON.stringify({ content: content })
                 });
-                
+
             } else {
                 // File upload mode
                 if (!this.currentFile) {
                     this.showError('Please select a file to upload.');
                     return;
                 }
-                
+
                 console.log('Sending file for evaluation:', this.currentFile.name);
-                
+
                 const formData = new FormData();
                 formData.append('file', this.currentFile);
-                
+
                 response = await fetch('/evaluate', {
                     method: 'POST',
                     body: formData
@@ -286,9 +285,9 @@ class TrustGraphedApp {
 
             const data = await response.json();
             console.log('Evaluation results:', data);
-            
+
             this.displayResults(data);
-            
+
         } catch (error) {
             console.error('Evaluation failed:', error);
             const errorMessage = error.message || error.toString() || 'Unknown error occurred';
@@ -351,7 +350,7 @@ class TrustGraphedApp {
         const scoreElement = trustScoreEl?.parentElement;
         if (scoreElement) {
             const score = trust_evaluation.trust_score;
-            
+
             if (score >= 0.8) {
                 scoreElement.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
             } else if (score >= 0.6) {
