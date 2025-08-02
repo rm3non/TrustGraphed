@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -756,7 +755,118 @@ body {
 
 .certificate-section h4 {
     margin-bottom: 10px;
-    color: #22543d;
+    color: #2d3748;
+}
+
+/* Detailed Explanation Styles */
+.detailed-explanation-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.detailed-explanation-section h4 {
+    margin-bottom: 15px;
+    color: #2d3748;
+}
+
+.detailed-report {
+    margin-top: 20px;
+}
+
+.explanation-card {
+    background: white;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #6b46c1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.explanation-card h5 {
+    margin-bottom: 15px;
+    color: #4a5568;
+    font-size: 1.1rem;
+}
+
+.explanation-card h6 {
+    margin-bottom: 10px;
+    color: #2d3748;
+    font-size: 1rem;
+}
+
+.breakdown-table {
+    display: grid;
+    gap: 10px;
+}
+
+.breakdown-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 15px;
+    padding: 10px;
+    background: #f7fafc;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.breakdown-final {
+    padding: 15px;
+    background: #e6fffa;
+    border-radius: 4px;
+    text-align: center;
+    margin-top: 10px;
+    font-family: 'Courier New', monospace;
+}
+
+.component-detail {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f7fafc;
+    border-radius: 6px;
+    border-left: 3px solid #4299e1;
+}
+
+.component-details-extra {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.component-details-extra span {
+    margin-right: 15px;
+    font-weight: 500;
+}
+
+.methodology-components {
+    margin: 15px 0;
+}
+
+.method-component {
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #f7fafc;
+    border-radius: 4px;
+}
+
+.recommendation {
+    margin-bottom: 10px;
+    padding: 12px;
+    background: #fff5f5;
+    border-left: 4px solid #fc8181;
+    border-radius: 4px;
+}
+
+.recommendation:has(✅) {
+    background: #f0fff4;
+    border-left-color: #48bb78;
+}
+
+.recommendation:has(⚠️) {
+    background: #fffaf0;
+    border-left-color: #ed8936;
 }
 
 .summary-text {
@@ -787,22 +897,22 @@ body {
     .hero-title {
         font-size: 2.5rem;
     }
-    
+
     .why-content {
         grid-template-columns: 1fr;
         gap: 40px;
     }
-    
+
     .footer-content {
         grid-template-columns: 1fr;
         gap: 40px;
     }
-    
+
     .hero-actions {
         flex-direction: column;
         align-items: center;
     }
-    
+
     .btn-hero, .btn-secondary {
         width: 100%;
         max-width: 300px;

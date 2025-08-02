@@ -111,7 +111,7 @@ class TrustGraphedApp {
 
         // Handle file drop
         dropZone.addEventListener('drop', (e) => this.handleDrop(e), false);
-        
+
         // Handle click to open file dialog - single event listener
         dropZone.addEventListener('click', (e) => {
             e.preventDefault();
@@ -187,7 +187,7 @@ class TrustGraphedApp {
         const allowedExtensions = ['.txt', '.pdf', '.docx'];
         const fileName = file.name.toLowerCase();
         const fileExtension = '.' + fileName.split('.').pop();
-        
+
         // Also check MIME types for additional validation
         const allowedMimeTypes = [
             'text/plain',
@@ -208,7 +208,7 @@ class TrustGraphedApp {
         this.showFileInfo(file.name);
         this.hideError(); // Clear any previous errors
         this.validateInput();
-        
+
         console.log('File successfully loaded and validated');
     }
 
@@ -310,7 +310,7 @@ class TrustGraphedApp {
                 try {
                     const responseText = await response.text();
                     console.log('Error response text:', responseText);
-                    
+
                     if (responseText) {
                         try {
                             const errorData = JSON.parse(responseText);
@@ -337,9 +337,9 @@ class TrustGraphedApp {
             console.error('Evaluation failed:', error);
             console.error('Error type:', typeof error);
             console.error('Error constructor:', error?.constructor?.name);
-            
+
             let errorMessage = 'Unknown error occurred during evaluation';
-            
+
             if (error instanceof Error && error.message) {
                 errorMessage = error.message;
             } else if (typeof error === 'string' && error.trim()) {
@@ -357,12 +357,12 @@ class TrustGraphedApp {
                     }
                 }
             }
-            
+
             // Ensure we have a meaningful error message
             if (!errorMessage || errorMessage === 'Unknown error occurred during evaluation') {
                 errorMessage = 'File processing failed. Please try again or use a different file.';
             }
-            
+
             this.showError(`Evaluation failed: ${errorMessage}`);
         } finally {
             this.setLoading(false);
@@ -414,9 +414,12 @@ class TrustGraphedApp {
 
         // Update certificate info
         const certIdEl = document.getElementById('certificateId');
-        const summaryEl = document.getElementById('readableSummary');
-        if (certIdEl) certIdEl.textContent = certificate_id;
-        if (summaryEl) summaryEl.textContent = readable_summary;
+        const certStatusEl = document.getElementById('certificateStatus');
+        if (certIdEl) certIdEl.textContent = certificate_id || 'N/A';
+        if (certStatusEl) certStatusEl.textContent = 'Valid';
+
+        // Display detailed explanation if available
+        this.displayDetailedExplanation(trust_evaluation.detailed_explanation);
 
         // Color-code trust score
         const scoreElement = trustScoreEl?.parentElement;
@@ -466,6 +469,23 @@ class TrustGraphedApp {
     hideError() {
         this.errorSection?.classList.add('hidden');
     }
+
+     // Method to display the detailed explanation
+     displayDetailedExplanation(explanation) {
+        const explanationContainer = document.getElementById('explanationContainer');
+        if (!explanationContainer) {
+            console.warn('Explanation container not found.');
+            return;
+        }
+
+        if (explanation && typeof explanation === 'string') {
+            explanationContainer.textContent = explanation;
+            explanationContainer.classList.remove('hidden');
+        } else {
+            explanationContainer.textContent = 'No detailed explanation available.';
+            explanationContainer.classList.add('hidden');
+        }
+    }
 }
 
 // Initialize the app when DOM is loaded
@@ -493,13 +513,13 @@ window.testEvaluate = async function(content = "This is a test content with some
 // UAT Test Suite
 window.runUATTests = async function() {
     console.log('🧪 Starting UAT Test Suite for TrustGraphed');
-    
+
     const results = {
         passed: 0,
         failed: 0,
         tests: []
     };
-    
+
     // Test 1: Text Input Submission
     try {
         console.log('Test 1: Text input submission...');
@@ -516,7 +536,7 @@ window.runUATTests = async function() {
         results.tests.push({ name: 'Text Input', status: 'FAIL', error: error.message });
         console.log('❌ Test 1 FAILED:', error.message);
     }
-    
+
     // Test 2: Backend Health Check
     try {
         console.log('Test 2: Backend health check...');
@@ -534,7 +554,7 @@ window.runUATTests = async function() {
         results.tests.push({ name: 'Backend Health', status: 'FAIL', error: error.message });
         console.log('❌ Test 2 FAILED:', error.message);
     }
-    
+
     // Test 3: File Processing Test Endpoint
     try {
         console.log('Test 3: File processing test endpoint...');
@@ -542,7 +562,7 @@ window.runUATTests = async function() {
             method: 'POST',
             body: new FormData() // Empty form data to test error handling
         });
-        
+
         // This should return an error, but it should be a properly formatted error
         if (!testFileResponse.ok) {
             const errorData = await testFileResponse.json();
@@ -559,33 +579,33 @@ window.runUATTests = async function() {
         results.tests.push({ name: 'File Error Handling', status: 'FAIL', error: error.message });
         console.log('❌ Test 3 FAILED:', error.message);
     }
-    
+
     console.log(`🏁 UAT Results: ${results.passed} passed, ${results.failed} failed`);
     console.table(results.tests);
-    
+
     return results;
 };
 
 // File upload simulation test
 window.testFileUpload = function(testFile) {
     console.log('🔍 Testing file upload with:', testFile?.name || 'no file');
-    
+
     if (!testFile) {
         console.log('❌ No file provided for testing');
         return;
     }
-    
+
     const app = new TrustGraphedApp();
     app.currentFile = testFile;
     app.currentInputMethod = 'file';
-    
+
     console.log('File details:', {
         name: testFile.name,
         size: testFile.size,
         type: testFile.type,
         lastModified: new Date(testFile.lastModified)
     });
-    
+
     // Simulate the form submission
     const event = new Event('submit');
     app.handleSubmit(event);

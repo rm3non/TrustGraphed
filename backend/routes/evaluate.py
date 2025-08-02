@@ -237,7 +237,8 @@ def evaluate_content():
                 "trust_score": score_result['trust_score'],
                 "trust_level": score_result['trust_level'],
                 "component_scores": score_result['component_scores'],
-                "insights": score_result['insights']
+                "insights": score_result['insights'],
+                "detailed_explanation": score_result.get('detailed_explanation', {})
             },
             "certificate_id": cert_result['certificate_id'],
             "module_results": {
